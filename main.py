@@ -1,8 +1,6 @@
-from pydoc import cli
-from turtle import color
 import discord
 from discord.ext import commands
-from utils import CustomHelpCommand, load_info, save_info, add_info, remove_info, get_prefix
+from utils import WARNING, CustomHelpCommand, load_info, save_info, add_info, remove_info, get_prefix, send_notice
 
 import os
 from dotenv import load_dotenv, find_dotenv
@@ -40,6 +38,38 @@ async def on_guild_join(guild: discord.Guild):
 async def on_guild_remove(guild: discord.Guild):
     remove_info(client, guild)
     save_info(client)
+
+
+@client.event
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    error = getattr(error, 'original', error)
+    ignored = (commands.NoPrivateMessage, commands.DisabledCommand, commands.CheckFailure,
+               commands.CommandNotFound, commands.UserInputError, discord.HTTPException,
+               commands.NotOwner)
+    print(error.__class__.__name__, ' > ', error)
+    if isinstance(error, ignored):
+        pass
+    elif isinstance(error, commands.MissingPermissions):
+        text = str(error)
+        # You are missing Manage Messages and Manage Nicknames permission(s) to run this command.
+        text = text.replace('(s)', '')
+        text = text[:-32] + '`' + text[-32:]
+        text = text[:16] + '`' + text[16:]
+        text = text.replace(' and ', '` and `')
+        # You are missing `Manage Messages` and `Manage Nicknames` permission to run this command.
+        await send_notice(ctx, text, notice_type=WARNING)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        text = f'Some argument(s) are not provided.\nHave a look at `{get_prefix(client, ctx.message)}help {ctx.command.name}`'
+        await send_notice(ctx, text)
+    else:
+        text = f'Invalid argument provided.\nHave a look at `{get_prefix(client, ctx.message)}help {ctx.command.name}`'
+        await send_notice(ctx, text)
+
+
+@client.command()
+@commands.has_permissions(manage_messages=True, manage_nicknames=True)
+async def t(ctx: commands.Context, user: discord.User):
+    await ctx.send('lol')
 
 
 @client.command()
