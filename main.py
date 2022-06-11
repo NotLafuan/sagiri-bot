@@ -67,12 +67,6 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 
 
 @client.command()
-@commands.has_permissions(manage_messages=True, manage_nicknames=True)
-async def t(ctx: commands.Context, user: discord.User):
-    await ctx.send('lol')
-
-
-@client.command()
 @commands.is_owner()
 async def load(ctx: commands.Context, cog: str):
     print(f'\n #################### Load {cog} #################### \n')
