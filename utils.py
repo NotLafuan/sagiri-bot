@@ -6,7 +6,7 @@ from datetime import timedelta, datetime
 import numpy as np
 import os
 import subprocess
-from typing import List, Dict, Literal, Mapping, Optional, Tuple, Union
+from typing import Literal, Mapping, Optional
 
 # spotify
 import spotipy
@@ -49,7 +49,7 @@ class CustomHelpCommand(commands.HelpCommand):
     def __init__(self):
         super().__init__()
 
-    async def send_bot_help(self, mapping: Mapping[Optional[commands.Cog], List[commands.Command]]):
+    async def send_bot_help(self, mapping: Mapping[Optional[commands.Cog], list[commands.Command]]):
         embed = discord.Embed(color=SILVER)
         embed.set_author(
             name='Help Command',
@@ -101,7 +101,7 @@ class CustomHelpCommand(commands.HelpCommand):
                 inline=False
             )
 
-        _commands: List[commands.Command] = list(group.commands)
+        _commands: list[commands.Command] = list(group.commands)
         for command in _commands:
             arguments = command.help.split('|')
             descriptions = command.description.split('|')
@@ -149,6 +149,11 @@ class CustomHelpCommand(commands.HelpCommand):
                 )
         await self.get_destination().send(embed=embed)
 
+    async def send_error_message(self, error: str):
+        error = error.replace('"', '`')
+        embed = discord.Embed(description=error, color=discord.Color.red())
+        msg: discord.Message = await self.get_destination().send(embed=embed)
+        await msg.delete(delay=3)
 
 
 def get_prefix(client: commands.Bot, message: discord.Message):
@@ -191,7 +196,7 @@ def remove_info(client: commands.Bot, guild: discord.Guild):
     client.server_info.pop(guild.id)
 
 
-async def send_notice(ctx: commands.Context, message: str, notice_type: str = ERROR, delay: Union[int, None] = None) -> discord.Message:
+async def send_notice(ctx: commands.Context, message: str, notice_type: str = ERROR, delay: int | None = None) -> discord.Message:
     if notice_type == ERROR:
         color = discord.Color.red()
     elif notice_type == WARNING:
@@ -220,14 +225,11 @@ class Time:
     value: float
 
     def __str__(self):
-        converted_time = str(timedelta(seconds=int(self.value)))
-        converted_time = converted_time.split(
-            ':')  # split hours, minutes, seconds
-        # remove if hours is 0
-        converted_time = [x for x in converted_time if x != '0']
-        converted_time = ':'.join([f'{int(float(number)):02d}' if number.isnumeric(
-        ) else number for number in converted_time])  # stitch back together
-        return converted_time
+        time_str = str(timedelta(seconds=int(self.value)))
+        time_str = time_str.split(':')  # split hours, minutes, seconds
+        time_str = [x for x in time_str if x != '0']  # remove if hours is 0
+        time_str = ':'.join(time_str)  # stitch back together
+        return time_str
 
     def __float__(self):
         return self.value
@@ -285,10 +287,10 @@ class Song():
     title: str
     thumbnail: str
     duration: Time
-    yturl: Union[str, None] = None
-    spurl: Union[str, None] = None
-    url: Union[str, None] = None
-    source: Union[discord.FFmpegPCMAudio, None] = None
+    yturl: str | None = None
+    spurl: str | None = None
+    url: str | None = None
+    source: discord.FFmpegPCMAudio | None = None
     start_time: datetime = datetime.now()
     delta: float = 0.
 
@@ -396,11 +398,11 @@ class ServerMusic():
     now_playing: :class:`discord.Message`
         The now playing message.
     """
-    queue: List[Song] = field(default_factory=list)
+    queue: list[Song] = field(default_factory=list)
     vc: discord.VoiceClient = None
     is_playing: bool = False
-    current_song: Union[Song, None] = None
-    queue_msg: Dict[int, discord.Message] = field(default_factory=dict)
+    current_song: Song | None = None
+    queue_msg: dict[int, discord.Message] = field(default_factory=dict)
     now_playing: discord.Message = None
 
     def __len__(self):
@@ -435,7 +437,7 @@ class Playlist():
 
 
 class Youtube():
-    def from_query(self, query: str) -> Union[Song, Literal[False]]:
+    def from_query(self, query: str) -> Song | Literal[False]:
         try:
             data = ytdl.extract_info(query, download=False, process=True)
             entry = data['entries'][0]
@@ -451,14 +453,14 @@ class Youtube():
         except:
             return False
 
-    def from_query_multiple(self, query: str, amount: int = 5) -> Union[List[Song], Literal[False]]:
+    def from_query_multiple(self, query: str, amount: int = 5) -> list[Song] | Literal[False]:
         try:
             data = ytdl.extract_info(
                 f'ytsearch{amount}:{query}',
                 download=False,
                 process=False
             )
-            songs: List[Song] = []
+            songs: list[Song] = []
             for entry in data['entries']:
                 song = Song(
                     type='youtube',
@@ -472,7 +474,7 @@ class Youtube():
         except:
             return False
 
-    def from_url(self, url: str) -> Union[Song, Literal[False]]:
+    def from_url(self, url: str) -> Song | Literal[False]:
         try:
             entry = ytdl.extract_info(url, download=False, process=False)
             song = Song(
@@ -487,13 +489,13 @@ class Youtube():
         except:
             return False
 
-    def from_playlist(self, url: str) -> Union[Tuple[List[Song], Playlist], Literal[False]]:
+    def from_playlist(self, url: str) -> tuple[list[Song], Playlist] | Literal[False]:
         try:
             playlist_id = url.split('list=')[-1].split('&')[0]
             url = 'https://www.youtube.com/playlist?list=' + playlist_id
             data = ytdl.extract_info(url, download=False, process=False)
 
-            songs: List[Song] = []
+            songs: list[Song] = []
             track_num = 0
             duration = Time(0)
             for entry in data['entries']:
@@ -543,7 +545,7 @@ class Spotify():
         )
         return song
 
-    def from_playlist(self, query: str) -> Tuple[List[Song], Playlist]:
+    def from_playlist(self, query: str) -> tuple[list[Song], Playlist]:
         result = self.sp.playlist(query)
 
         # scroll through tracks pages
@@ -552,7 +554,7 @@ class Spotify():
             result['tracks'] = self.sp.next(result['tracks'])
             tracks.extend(result['tracks']['items'])
 
-        songs: List[Song] = []
+        songs: list[Song] = []
         track_num = 0
         duration = Time(0)
         for track in tracks:
@@ -581,7 +583,7 @@ class Spotify():
 
         return songs, playlist
 
-    def from_album(self, query: str) -> Tuple[List[Song], Playlist]:
+    def from_album(self, query: str) -> tuple[list[Song], Playlist]:
         result = self.sp.album(query)
 
         # scroll through tracks pages
@@ -590,7 +592,7 @@ class Spotify():
             result['tracks'] = self.sp.next(result['tracks'])
             tracks.extend(result['tracks']['items'])
 
-        songs: List[Song] = []
+        songs: list[Song] = []
         track_num = 0
         duration = Time(0)
         for track in tracks:
@@ -629,7 +631,7 @@ class File():
         '.mp3'
     ]
 
-    def sec_from_url(self, url: str) -> Union[float, Literal[False]]:
+    def sec_from_url(self, url: str) -> float | Literal[False]:
         try:
             cmd = f'ffprobe -i {url} -show_entries format=duration -v quiet -of csv="p=0"'
             output = subprocess.check_output(cmd, shell=True)
@@ -659,13 +661,13 @@ class File():
             )
 
 
-def search(query: str) -> Tuple[List[Song], Union[Playlist, Literal[False]]]:
+def search(query: str) -> tuple[list[Song], Playlist | Literal[False]]:
     youtube = Youtube()
     spotify = Spotify()
     file = File()
 
-    songs: List[Song] = []
-    playlist: Union[Playlist, Literal[False]] = False
+    songs: list[Song] = []
+    playlist: Playlist | Literal[False] = False
 
     # spotify
     if query.startswith('https://open.spotify.com/track/') or query.startswith('spotify:track:'):
