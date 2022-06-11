@@ -42,11 +42,10 @@ async def on_guild_remove(guild: discord.Guild):
 
 @client.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    error = getattr(error, 'original', error)
     ignored = (commands.NoPrivateMessage, commands.DisabledCommand, commands.CheckFailure,
                commands.CommandNotFound, commands.UserInputError, discord.HTTPException,
                commands.NotOwner)
-    print(error.__class__.__name__, ' > ', error)
+    error = getattr(error, 'original', error)
     if isinstance(error, ignored):
         pass
     elif isinstance(error, commands.MissingPermissions):
