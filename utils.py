@@ -43,6 +43,7 @@ MESSAGE = 'message'
 SILVER: discord.Color = discord.Color.from_rgb(r=203, g=213, b=225)
 
 EMPTY_CHAR = '‎'
+DEVELOPER_ID = 319485284465115147
 
 
 class CustomHelpCommand(commands.HelpCommand):

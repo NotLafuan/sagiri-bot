@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import WARNING, CustomHelpCommand, load_info, save_info, add_info, remove_info, get_prefix, send_notice
+from utils import DEVELOPER_ID, SILVER, WARNING, CustomHelpCommand, load_info, save_info, add_info, remove_info, get_prefix, send_notice
 
 import os
 from dotenv import load_dotenv, find_dotenv
@@ -24,7 +24,6 @@ for cog in cogs:
 @client.event
 async def on_ready():
     print(f'{client.user} is ready.')
-    client.mention = f'<@!{client.user.id}>'
     load_info(client)
 
 
@@ -38,6 +37,26 @@ async def on_guild_join(guild: discord.Guild):
 async def on_guild_remove(guild: discord.Guild):
     remove_info(client, guild)
     save_info(client)
+
+
+@client.event
+async def on_message(message: discord.Message):
+    if message.content == client.user.mention:
+        prefix = get_prefix(client, message)
+        developer = await client.fetch_user(DEVELOPER_ID)
+
+        title = 'Server settings information'
+        text = f'''Server prefix: `{prefix}`
+        Server ID: `{message.guild.id}`
+
+        Join a voice channel and `{prefix}play` a song.
+        Type `{prefix}help` for the list of commands.'''
+        # [Invite]({INVITE_LINK})
+
+        embed = discord.Embed(title=title, description=text, color=SILVER)
+        embed.set_footer(text=f'Developed by {developer}')
+        await message.channel.send(embed=embed)
+    await client.process_commands(message)
 
 
 @client.event

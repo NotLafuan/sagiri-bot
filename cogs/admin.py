@@ -50,7 +50,7 @@ class admin(commands.Cog):
 
         if message.author == self.client.user:
             return True
-        elif message.content == self.client.mention:
+        elif message.content == self.client.user.mention:
             return True
         elif message.content.startswith(prefix):
             if message.content.split()[0][len(prefix):] in commands_aliases:
