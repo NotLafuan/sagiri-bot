@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
-from utils import Playlist, ServerInfo, ServerMusic, Song, send_notice, search, ERROR, WARNING, MESSAGE, SILVER
+from utils import Playlist, ServerInfo, ServerMusic, Song, save_info, send_notice, search, ERROR, WARNING, MESSAGE, SILVER
 import asyncio
 from time import sleep
-from typing import Dict, Union
 from cogs.database import database
+
 
 class music(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -138,7 +138,7 @@ class music(commands.Cog):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         server_info: ServerInfo = self.client.server_info[ctx.guild.id]
         # song looping logic
-        if server_info.loop != 'off' and server_music.current_song:
+        if server_info.loop != 'disabled' and server_music.current_song:
             if server_music.current_song.url and not server_music.current_song.source:
                 if server_info.loop == 'queue':
                     server_music.queue.append(server_music.current_song)
@@ -218,7 +218,7 @@ class music(commands.Cog):
             await send_notice(ctx, 'Could not play song.')
 
     @play.command(name='file', aliases=['f'], help='', description='Plays the file attached to the message.\n`[Music]`')
-    async def p_file(self, ctx: commands.Context):
+    async def play_file(self, ctx: commands.Context):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         message: discord.Message = ctx.message
         if message.attachments:
@@ -332,6 +332,177 @@ class music(commands.Cog):
         else:
             await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
 
+    @commands.command(aliases=['rp', 'restart'], help='', description='Replay the current song.\n`[Music]`')
+    async def replay(self, ctx: commands.Context):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            server_music.current_song.reset_time()
+            server_music.queue.insert(0, server_music.current_song)
+            server_music.vc.stop()
+            await ctx.message.add_reaction('✅')
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.command(aliases=['sh'], help='', description='Shuffle the queue.\n`[Music]`')
+    async def shuffle(self, ctx: commands.Context):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.shuffle()
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.command(help='', description='Reverse the current queue.\n`[Music]`')
+    async def reverse(self, ctx: commands.Context):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.reverse()
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.group(aliases=['mv'], invoke_without_command=True, help='<song number>|<from> <to>', description='Move the selected song to the top of the queue.\n`[Music]`|Move the selected song to the provided position.\n`[Music]`')
+    async def move(self, ctx: commands.Context, pos1: int, pos2: int = 1):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.move(pos1-1, pos2-1)
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @move.command(name='swap', aliases=['swp'], help='<first> <second>', description='Swap track positions in the queue.\n`[Music]`')
+    async def move_swap(self, ctx: commands.Context, pos1: int, pos2: int):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.swap(pos1-1, pos2-1)
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @move.command(name='last', help='', description='Move the last track in the queue to the top.\n`[Music]`')
+    async def move_last(self, ctx: commands.Context):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.move(-1, 0)
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.group(aliases=['rm', 'del', 'delete'], invoke_without_command=True, help='<song number>', description='Remove a specific song from the queue.\n`[Music]`')
+    async def remove(self, ctx: commands.Context, pos: int):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.remove(pos-1)
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @remove.command(name='range', aliases=['rg'], help='<from> <to>', description='Remove a range of tracks from the queue.\n`[Music]`')
+    async def remove_range(self, ctx: commands.Context, pos1: int, pos2: int):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.remove(slice(pos1-1, pos2))
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @remove.command(name='last', help='', description='Remove the last track in the queue.\n`[Music]`')
+    async def remove_last(self, ctx: commands.Context):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                server_music.remove(-1)
+                await ctx.message.add_reaction('✅')
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.group(aliases=['lp'], invoke_without_command=True, help='', description='Cycles through all three loop modes (queue, song, off).\n`[Music]`')
+    async def loop(self, ctx: commands.Context):
+        server_info: ServerInfo = self.client.server_info[ctx.guild.id]
+        server_info.cycle_loop()
+        await send_notice(ctx, f'Looping `{server_info.loop}`', notice_type=MESSAGE)
+        save_info(self.client)
+
+    @loop.command(name='queue', aliases=['q'], help='', description='Loop the queue.\n`[Music]`')
+    async def loop_queue(self, ctx: commands.Context):
+        server_info: ServerInfo = self.client.server_info[ctx.guild.id]
+        server_info.loop = 'queue'
+        await send_notice(ctx, f'Looping `{server_info.loop}`', notice_type=MESSAGE)
+        save_info(self.client)
+
+    @loop.command(name='song', help='', description='Loop the current playing song.\n`[Music]`')
+    async def loop_song(self, ctx: commands.Context):
+        server_info: ServerInfo = self.client.server_info[ctx.guild.id]
+        server_info.loop = 'song'
+        await send_notice(ctx, f'Looping `{server_info.loop}`', notice_type=MESSAGE)
+        save_info(self.client)
+
+    @loop.command(name='off', aliases=['disable'], help='', description='Turn looping off.\n`[Music]`')
+    async def loop_off(self, ctx: commands.Context):
+        server_info: ServerInfo = self.client.server_info[ctx.guild.id]
+        server_info.loop = 'disabled'
+        await send_notice(ctx, f'Looping `{server_info.loop}`', notice_type=MESSAGE)
+        save_info(self.client)
+
+    @commands.command(aliases=['sk'], help='mm:ss', description='Seeks to a specific position in the current song.\n`[Music]`')
+    async def seek(self, ctx: commands.Context, pos: str):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            FFMPEG_OPTIONS = {
+                'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                'options': f'-vn -ss {pos}'
+            }
+            url = server_music.current_song.url
+            source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
+            server_music.current_song.source = source
+            server_music.current_song.set_progress_str(pos)
+
+            server_music.queue.insert(0, server_music.current_song)
+            server_music.vc.stop()
+            await ctx.message.add_reaction('✅')
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.command(aliases=['vol', 'v'], help='|0-200', description='Show the current volume.\n`[Music]`|Change the bot\'s output volume.\n`[Music]`')
+    async def volume(self, ctx: commands.Context, vol: float=None):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        server_info: ServerInfo = self.client.server_info[ctx.guild.id]
+        if not vol:
+            await send_notice(ctx, f'Volume is at `{server_info.volume}%`.', notice_type=MESSAGE)
+        else:
+            if vol < 0:
+                await send_notice(ctx, 'Volume too low.', notice_type=ERROR)
+            elif vol > 200:
+                await send_notice(ctx, 'Volume too high.', notice_type=ERROR)
+            else:
+                server_info.volume = vol
+                await send_notice(ctx, f'Volume set to `{vol}%`.', notice_type=WARNING)
+                save_info(self.client)
+                if server_music.is_playing:
+                    server_music.vc.source.volume = vol/100
 
 def setup(client: commands.Bot):
     client.add_cog(music(client))

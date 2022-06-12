@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 import numpy as np
 import os
 import subprocess
+from itertools import cycle
 from typing import Literal, Mapping, Optional
 
 # spotify
@@ -217,9 +218,24 @@ async def send_notice(ctx: commands.Context, message: str, notice_type: str = ER
 
 @dataclass
 class ServerInfo():
+    """Store all the server specific information.
+
+    Attributes
+    -----------
+    prefix: :class:`str`
+        The server's prefix.
+    volume: :class:`float`
+        The music's volume level.
+    loop: :class:`str`
+        The current loop mode.
+    """
     prefix: str
     volume: float
     loop: str
+    loop_modes = cycle(['queue', 'song', 'disabled'])
+
+    def cycle_loop(self):
+        self.loop = next(self.loop_modes)
 
 
 @dataclass(eq=True, order=True)
