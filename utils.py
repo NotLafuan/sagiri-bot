@@ -34,6 +34,7 @@ YTDL_OPTIONS = {
     'no_warnings': True,
     'noplaylist': True,
     'default_search': 'ytsearch',
+    'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
