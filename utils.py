@@ -15,6 +15,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 # .env
 from dotenv import load_dotenv, find_dotenv
 import yt_dlp
+
 load_dotenv(find_dotenv())
 
 # environment variables
@@ -663,6 +664,7 @@ class File():
 
 
 def search(query: str) -> tuple[list[Song], Playlist | Literal[False]]:
+    """Auto song search."""
     youtube = Youtube()
     spotify = Spotify()
     file = File()
