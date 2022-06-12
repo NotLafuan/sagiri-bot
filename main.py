@@ -131,4 +131,30 @@ async def reload(ctx: commands.Context, cog: str):
         embed = discord.Embed(description=error, color=discord.Color.red())
         await ctx.send(embed=embed)
 
+
+@client.command()
+@commands.is_owner()
+async def reloadall(ctx: commands.Context):
+    print(f'\n #################### Reload All #################### \n')
+    for cog in cogs:
+        if cog != 'database':
+            try:
+                client.unload_extension(f'cogs.{cog}')
+                client.load_extension(f'cogs.{cog}')
+                await ctx.message.add_reaction('✅')
+            except commands.ExtensionNotLoaded:
+                try:
+                    client.load_extension(f'cogs.{cog}')
+                    await ctx.message.add_reaction('✅')
+                except Exception as e:
+                    error = str(e).replace('\'', '`')
+                    embed = discord.Embed(
+                        description=error, color=discord.Color.red())
+                    await ctx.send(embed=embed)
+            except Exception as e:
+                error = str(e).replace('\'', '`')
+                embed = discord.Embed(
+                    description=error, color=discord.Color.red())
+                await ctx.send(embed=embed)
+
 client.run(BOT_TOKEN)
