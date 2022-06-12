@@ -451,7 +451,7 @@ class Youtube():
                 url=entry['url']
             )
             return song
-        except:
+        except Exception:
             return False
 
     def from_query_multiple(self, query: str, amount: int = 5) -> list[Song] | Literal[False]:
@@ -472,7 +472,7 @@ class Youtube():
                 )
                 songs.append(song)
             return songs
-        except:
+        except Exception:
             return False
 
     def from_url(self, url: str) -> Song | Literal[False]:
@@ -487,7 +487,7 @@ class Youtube():
                 url=entry['formats'][-1]['url']
             )
             return song
-        except:
+        except Exception:
             return False
 
     def from_playlist(self, url: str) -> tuple[list[Song], Playlist] | Literal[False]:
@@ -519,7 +519,7 @@ class Youtube():
                 track_num=track_num
             )
             return songs, playlist
-        except:
+        except Exception:
             return False
 
 
@@ -637,7 +637,7 @@ class File():
             cmd = f'ffprobe -i {url} -show_entries format=duration -v quiet -of csv="p=0"'
             output = subprocess.check_output(cmd, shell=True)
             return float(output)
-        except:
+        except Exception:
             return False
 
     def search_url(self, link: str) -> Song:
