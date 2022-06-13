@@ -1,12 +1,13 @@
 import discord
 from discord.ext import commands
-from utils import DEVELOPER_ID, SILVER, WARNING, CustomHelpCommand, load_info, save_info, add_info, remove_info, get_prefix, send_notice
+from utils import *
 
 import os
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+DEVELOPER_ID = 319485284465115147
 
 client = commands.Bot(
     command_prefix=get_prefix,

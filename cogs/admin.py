@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
-from utils import send_notice, save_info, ServerInfo, ServerMusic, ERROR, WARNING, MESSAGE, SILVER
 from typing import Dict
 from datetime import datetime, timedelta
 from cogs.database import database
+from utils import *
 
 
 class admin(commands.Cog):

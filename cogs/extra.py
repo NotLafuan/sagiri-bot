@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import numpy as np
-from utils import send_notice, MESSAGE, SILVER
+from utils import *
 
 
 class extra(commands.Cog):

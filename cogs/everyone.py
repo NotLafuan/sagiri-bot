@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import time
-from utils import send_notice, MESSAGE, SILVER
+from utils import *
 
 
 class everyone(commands.Cog):
