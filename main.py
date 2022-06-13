@@ -62,8 +62,7 @@ async def on_message(message: discord.Message):
 @client.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     ignored = (commands.NoPrivateMessage, commands.DisabledCommand, commands.CheckFailure,
-               commands.CommandNotFound, commands.UserInputError, discord.HTTPException,
-               commands.NotOwner)
+               commands.CommandNotFound, discord.HTTPException, commands.NotOwner)
     error = getattr(error, 'original', error)
     if isinstance(error, ignored):
         pass
@@ -79,9 +78,11 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     elif isinstance(error, commands.MissingRequiredArgument):
         text = f'Some argument(s) are not provided.\nHave a look at `{get_prefix(client, ctx.message)}help {ctx.command.name}`'
         await send_notice(ctx, text)
-    else:
+    elif isinstance(error, commands.UserInputError):
         text = f'Invalid argument provided.\nHave a look at `{get_prefix(client, ctx.message)}help {ctx.command.name}`'
         await send_notice(ctx, text)
+    else:
+        print(error.__class__.__name__, ' > ', error)
 
 
 @client.command()

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils import Playlist, ServerInfo, ServerMusic, Song, save_info, send_notice, search, ERROR, WARNING, MESSAGE, SILVER
+from utils import Playlist, QueueEmbed, ServerInfo, ServerMusic, Song, Youtube, save_info, send_notice, search, ERROR, WARNING, MESSAGE, SILVER
 import asyncio
 from time import sleep
 from cogs.database import database
@@ -245,6 +245,30 @@ class music(commands.Cog):
         else:
             await send_notice(ctx, 'No file provided.')
 
+    @commands.command(aliases=['sc'], help='<song name>', description='Searches and lets you choose a song.\n`[Music]`')
+    async def search(self, ctx: commands.Context, *, query: str):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        youtube: Youtube = Youtube()
+        results: list[Song] = youtube.from_query_multiple(query)
+
+        description = ''
+        for i, song in enumerate(results):
+            title = song.title.replace('[', '(').replace(']', ')')
+            if len(title) > 43:
+                title = title[:40] + '...'
+            description += f'**{i+1}. [{song.duration}]** [{title}]({song.link})\n'
+
+        embed = discord.Embed(
+            title='Search results',
+            description=description,
+            color=SILVER
+        )
+        embed.set_footer(
+            icon_url=ctx.author.avatar_url,
+            text=f'Searched by {ctx.author.display_name}'
+        )
+        message: discord.Message = await ctx.send(embed=embed)
+
     @commands.command(aliases=['break'], help='', description='Pauses the current playing song.\n`[Music]`')
     async def pause(self, ctx: commands.Context):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
@@ -329,6 +353,18 @@ class music(commands.Cog):
                     await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
             else:
                 await ctx.send(embed=self.current_info_embed(server_music))
+        else:
+            await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
+
+    @commands.command(aliases=['q', 'list'], help='|<page number>', description='Shows the queue.\n`[Music]`|Show a specific page of the queue.\n`[Music]`')
+    async def queue(self, ctx: commands.Context, page: int = 1):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        if server_music.is_playing:
+            if server_music.queue:
+                queue_embed = QueueEmbed(server_music, page)
+                message: discord.Message = await ctx.send(embed=queue_embed.embed)
+            else:
+                await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
         else:
             await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
 
@@ -487,7 +523,7 @@ class music(commands.Cog):
             await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
 
     @commands.command(aliases=['vol', 'v'], help='|0-200', description='Show the current volume.\n`[Music]`|Change the bot\'s output volume.\n`[Music]`')
-    async def volume(self, ctx: commands.Context, vol: float=None):
+    async def volume(self, ctx: commands.Context, vol: float = None):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         server_info: ServerInfo = self.client.server_info[ctx.guild.id]
         if not vol:
@@ -503,6 +539,7 @@ class music(commands.Cog):
                 save_info(self.client)
                 if server_music.is_playing:
                     server_music.vc.source.volume = vol/100
+
 
 def setup(client: commands.Bot):
     client.add_cog(music(client))

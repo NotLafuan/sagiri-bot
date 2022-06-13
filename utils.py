@@ -34,7 +34,8 @@ YTDL_OPTIONS = {
     'no_warnings': True,
     'noplaylist': True,
     'default_search': 'ytsearch',
-    'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
+    # bind to ipv4 since ipv6 addresses cause issues sometimes
+    'source_address': '0.0.0.0',
 }
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
@@ -711,3 +712,45 @@ def search(query: str) -> tuple[list[Song], Playlist | Literal[False]]:
 
     songs = [song for song in songs if song]  # remove any failed song
     return songs, playlist
+
+
+@dataclass
+class QueueEmbed():
+    server_music: ServerMusic
+    page: int
+    per_page: int = 10
+    message: Optional[discord.Message] = None
+
+    def add(self, add: int):
+        self.page += add
+
+    def set(self, value: int):
+        self.page = value
+
+    @property
+    def embed(self) -> discord.Embed:
+        queue_len = len(self.server_music.queue)
+        page_len = int(np.ceil(queue_len/self.per_page))
+
+        # loop page
+        self.page = page_len if self.page < 1 else self.page
+        self.page = 1 if self.page > page_len else self.page
+
+        # cut the queue
+        lower_bound = (self.page - 1) * self.per_page
+        upper_bound = (self.page) * self.per_page
+        if self.page == page_len:  # last page
+            songs = self.server_music.queue[lower_bound:]
+        else:
+            songs = self.server_music.queue[lower_bound:upper_bound]
+
+        # generate text
+        first_num = ((self.page - 1) * self.per_page) + 1
+        text = ''
+        for i, song in enumerate(songs):
+            text += f'{first_num+i}. {song.title} [{song.duration}]\n'
+        footer = f'Page {self.page}/{page_len}'
+
+        embed = discord.Embed(description=text, color=SILVER)
+        embed.set_footer(text=footer)
+        return embed
