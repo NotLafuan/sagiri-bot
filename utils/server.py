@@ -1,9 +1,9 @@
+import discord
+from discord.ext import commands
 from dataclasses import dataclass
 from itertools import cycle
 import json
 from typing import Mapping, Optional
-import discord
-from discord.ext import commands
 
 ERROR = 'error'
 WARNING = 'warning'

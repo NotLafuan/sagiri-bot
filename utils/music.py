@@ -3,8 +3,8 @@ import discord
 import numpy as np
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from search import FFMPEG_OPTIONS, ytdl
-from server import SILVER
+from .search import FFMPEG_OPTIONS, ytdl
+from .server import SILVER
 
 
 @dataclass(eq=True, order=True)
