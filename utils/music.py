@@ -3,9 +3,8 @@ import discord
 import numpy as np
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from .search import FFMPEG_OPTIONS, ytdl
-from .server import SILVER
 
+SILVER: discord.Color = discord.Color.from_rgb(r=203, g=213, b=225)
 
 @dataclass(eq=True, order=True)
 class Time:
@@ -152,6 +151,7 @@ class Song():
             return self.url
 
     def extract_url(self):
+        from .search import ytdl
         if self.url:
             pass
         elif self.type == 'file':
@@ -165,6 +165,7 @@ class Song():
             self.url = data['formats'][-1]['url']
 
     def extract_source(self) -> discord.FFmpegPCMAudio:
+        from .search import FFMPEG_OPTIONS
         if self.source:
             source = self.source
             self.source = None

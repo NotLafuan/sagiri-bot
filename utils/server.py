@@ -187,7 +187,7 @@ def remove_info(client: commands.Bot, guild: discord.Guild):
     client.server_info.pop(guild.id)
 
 
-async def send_notice(ctx: commands.Context, message: str, notice_type: str = ERROR, delay: int | None = None) -> discord.Message:
+async def send_notice(messageable: discord.abc.Messageable, message: str, notice_type: str = ERROR, delay: int | None = None) -> discord.Message:
     if notice_type == ERROR:
         color = discord.Color.red()
     elif notice_type == WARNING:
@@ -198,7 +198,7 @@ async def send_notice(ctx: commands.Context, message: str, notice_type: str = ER
         description=message,
         color=color
     )
-    notice: discord.Message = await ctx.send(embed=embed)
+    notice: discord.Message = await messageable.send(embed=embed)
     if delay:
         await notice.delete(delay=delay)
     return notice
