@@ -27,7 +27,6 @@ class everyone(commands.Cog):
             embed = discord.Embed(title=title, description=text, color=SILVER)
             embed.set_footer(text=f'Developed by {developer}')
             await message.channel.send(embed=embed)
-        await self.client.process_commands(message)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
