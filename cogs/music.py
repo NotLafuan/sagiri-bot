@@ -296,7 +296,7 @@ class music(commands.Cog):
             await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
 
     @commands.command(aliases=['s', 'next'], help='|<trackNumber>', description='Lets you skip the current song.\n`[Music]`|Skips to a specific track in the queue.\n`[Music]`')
-    async def skip(self, ctx: commands.Context, skip_amount: int = 0):
+    async def skip(self, ctx: commands.Context, skip_amount: Optional[int]):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         if server_music.is_playing:
             if skip_amount:
@@ -343,7 +343,7 @@ class music(commands.Cog):
             await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
 
     @commands.command(aliases=['si', 'np', 'song', 'now', 'nowplaying'], help='|<song number>', description='Shows details of the song currently being played.\n`[Music]`|Shows the detail of a specific song in the queue.\n`[Music]`')
-    async def songinfo(self, ctx: commands.Context, song_num: int = 0):
+    async def songinfo(self, ctx: commands.Context, song_num: Optional[int]):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         if server_music.is_playing:
             if song_num:
@@ -504,17 +504,17 @@ class music(commands.Cog):
         save_info(self.client)
 
     @commands.command(aliases=['sk'], help='mm:ss', description='Seeks to a specific position in the current song.\n`[Music]`')
-    async def seek(self, ctx: commands.Context, pos: str):
+    async def seek(self, ctx: commands.Context, timestamp: str):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         if server_music.is_playing:
             FFMPEG_OPTIONS = {
                 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                'options': f'-vn -ss {pos}'
+                'options': f'-vn -ss {timestamp}'
             }
             url = server_music.current_song.url
             source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
             server_music.current_song.source = source
-            server_music.current_song.set_progress_str(pos)
+            server_music.current_song.set_progress_str(timestamp)
 
             server_music.queue.insert(0, server_music.current_song)
             server_music.vc.stop()
@@ -523,7 +523,7 @@ class music(commands.Cog):
             await send_notice(ctx, 'The bot is currently not playing.', notice_type=ERROR)
 
     @commands.command(aliases=['vol', 'v'], help='|0-200', description='Show the current volume.\n`[Music]`|Change the bot\'s output volume.\n`[Music]`')
-    async def volume(self, ctx: commands.Context, vol: float = None):
+    async def volume(self, ctx: commands.Context, vol: Optional[float]):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         server_info: ServerInfo = self.client.server_info[ctx.guild.id]
         if not vol:

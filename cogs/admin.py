@@ -26,7 +26,7 @@ class admin(commands.Cog):
             return True
 
     @commands.command(help='|<new prefix>', description='Show the current prefix.\n`[Everyone]`|Lets you set a new prefix.\n`[Manage Server]`')
-    async def sagiriprefix(self, ctx: commands.Context, prefix: str = ''):
+    async def sagiriprefix(self, ctx: commands.Context, prefix: Optional[str]):
         server_info: Dict[int, ServerInfo] = self.client.server_info
         if prefix:
             permissions = ctx.author.permissions_in(ctx.channel)
