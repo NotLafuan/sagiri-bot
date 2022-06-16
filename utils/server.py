@@ -148,6 +148,8 @@ class ServerInfo():
     loop_modes = cycle(['queue', 'song', 'disabled'])
 
     def cycle_loop(self):
+        while next(self.loop_modes) != self.loop:
+            pass
         self.loop = next(self.loop_modes)
 
 
