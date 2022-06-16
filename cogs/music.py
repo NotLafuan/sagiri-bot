@@ -217,6 +217,30 @@ class music(commands.Cog):
         else:
             await send_notice(ctx, 'Could not play song.')
 
+    @play.command(name='search', aliases=['sc'], help='<song name>', description='Searches and lets you choose a song.\n`[Music]`')
+    async def play_search(self, ctx: commands.Context, *, query: str):
+        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
+        youtube: Youtube = Youtube()
+        results: list[Song] = youtube.from_query_multiple(query)
+
+        description = ''
+        for i, song in enumerate(results):
+            title = song.title.replace('[', '(').replace(']', ')')
+            if len(title) > 43:
+                title = title[:40] + '...'
+            description += f'**{i+1}. [{song.duration}]** [{title}]({song.link})\n'
+
+        embed = discord.Embed(
+            title='Search results',
+            description=description,
+            color=SILVER
+        )
+        embed.set_footer(
+            icon_url=ctx.author.avatar_url,
+            text=f'Searched by {ctx.author.display_name}'
+        )
+        message: discord.Message = await ctx.send(embed=embed)
+
     @play.command(name='file', aliases=['f'], help='', description='Plays the file attached to the message.\n`[Music]`')
     async def play_file(self, ctx: commands.Context):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
@@ -244,30 +268,6 @@ class music(commands.Cog):
                 await send_notice(ctx, str(e))
         else:
             await send_notice(ctx, 'No file provided.')
-
-    @commands.command(aliases=['sc'], help='<song name>', description='Searches and lets you choose a song.\n`[Music]`')
-    async def search(self, ctx: commands.Context, *, query: str):
-        server_music: ServerMusic = self.database.server_music[ctx.guild.id]
-        youtube: Youtube = Youtube()
-        results: list[Song] = youtube.from_query_multiple(query)
-
-        description = ''
-        for i, song in enumerate(results):
-            title = song.title.replace('[', '(').replace(']', ')')
-            if len(title) > 43:
-                title = title[:40] + '...'
-            description += f'**{i+1}. [{song.duration}]** [{title}]({song.link})\n'
-
-        embed = discord.Embed(
-            title='Search results',
-            description=description,
-            color=SILVER
-        )
-        embed.set_footer(
-            icon_url=ctx.author.avatar_url,
-            text=f'Searched by {ctx.author.display_name}'
-        )
-        message: discord.Message = await ctx.send(embed=embed)
 
     @commands.command(aliases=['break'], help='', description='Pauses the current playing song.\n`[Music]`')
     async def pause(self, ctx: commands.Context):
