@@ -16,7 +16,12 @@ client = commands.Bot(
 
 client.server_info = {}
 
-cogs = ['database', 'everyone', 'music', 'admin', 'extra']
+cogs = ['database',
+        'everyone',
+        'music',
+        'admin',
+        'anime',
+        'extra']
 for cog in cogs:
     client.load_extension(f'cogs.{cog}')
 

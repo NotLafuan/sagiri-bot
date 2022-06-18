@@ -30,8 +30,8 @@ class everyone(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        ignored = (commands.NoPrivateMessage, commands.DisabledCommand, commands.CheckFailure,
-                   commands.CommandNotFound, discord.HTTPException, commands.NotOwner)
+        ignored = (commands.DisabledCommand, commands.CheckFailure,
+                   commands.CommandNotFound, discord.HTTPException)
         error = getattr(error, 'original', error)
         if isinstance(error, ignored):
             pass
@@ -52,6 +52,7 @@ class everyone(commands.Cog):
             await send_notice(ctx, text)
         else:
             print(error.__class__.__name__, ' > ', error)
+            raise error
 
     @commands.command(help='<text to repeat>', description='Make Sagiri say something.\n`[Everyone]`')
     async def say(self, ctx: commands.Context, *, query: str):

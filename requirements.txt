@@ -3,3 +3,5 @@ python-dotenv
 yt-dlp
 numpy
 spotipy
+spacy
+en_core_web_sm-3.3.0-py3-none-any.whl
