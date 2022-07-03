@@ -1,7 +1,7 @@
 import subprocess
 import os
 import yt_dlp
-from typing import Literal
+from typing import Literal, Optional
 from .music import Song, Playlist, Time
 
 
@@ -37,6 +37,13 @@ ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
 
 
 class Youtube():
+    def get_url_from_formats(self, formats) -> Optional[str]:
+        for format in reversed(formats):
+            if 'manifest_url' in format or 'ext' not in format:
+                continue
+            elif format['ext'] == 'm4a':
+                return format['url']
+
     def from_query(self, query: str) -> Song | Literal[False]:
         try:
             data = ytdl.extract_info(query, download=False, process=True)
@@ -60,6 +67,7 @@ class Youtube():
                 download=False,
                 process=False
             )
+
             songs: list[Song] = []
             for entry in data['entries']:
                 song = Song(
@@ -83,7 +91,7 @@ class Youtube():
                 thumbnail=entry['thumbnail'],
                 duration=Time(entry['duration']),
                 yturl=entry['webpage_url'],
-                url=entry['formats'][-1]['url']
+                url=self.get_url_from_formats(entry['formats'])
             )
             return song
         except Exception:

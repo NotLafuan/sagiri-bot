@@ -1,10 +1,8 @@
-from typing import Optional
 import discord
 from discord.ui import View, Button
 import numpy as np
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from cogs.music import music
 
 SILVER: discord.Color = discord.Color.from_rgb(r=203, g=213, b=225)
 
@@ -154,7 +152,7 @@ class Song:
             return self.url
 
     def extract_url(self):
-        from .search import ytdl
+        from .search import ytdl, Youtube
         if self.url:
             pass
         elif self.type == 'file':
@@ -165,7 +163,7 @@ class Song:
             self.url = data['entries'][0]['url']
         elif self.type == 'youtube':
             data = ytdl.extract_info(self.yturl, download=False, process=False)
-            self.url = data['formats'][-1]['url']
+            self.url = Youtube.get_url_from_formats(data['formats'])
 
     def extract_source(self) -> discord.FFmpegPCMAudio:
         from .search import FFMPEG_OPTIONS
@@ -305,8 +303,3 @@ class QueueEmbed:
         embed = discord.Embed(description=text, color=SILVER)
         embed.set_footer(text=footer)
         return embed
-
-class MultiSearchView(View):
-    def __init__(self, *, timeout: Optional[float] = 180, music: music):
-        super().__init__(timeout=timeout)
-        self.music = music

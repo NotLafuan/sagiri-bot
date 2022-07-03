@@ -228,12 +228,9 @@ class music(commands.Cog):
                 title = title[:40] + '...'
             description += f'**{i+1}. [{song.duration}]** [{title}]({song.link})\n'
 
-        embed = discord.Embed(
-            title='Search results',
-            description=description,
-            color=SILVER
-        )
-
+        embed = discord.Embed(title='Search results',
+                              description=description,
+                              color=SILVER)
         select = Select(placeholder='Select from the search result.',
                         max_values=5,
                         options=[
@@ -260,16 +257,19 @@ class music(commands.Cog):
                     else:
                         added_embed = self.added_embed(song, server_music)
                         await ctx.send(embed=added_embed)
-            embed = discord.Embed(
-                title='Search results',
-                description=description,
-                color=discord.Color.gold()
-            )
+            embed = discord.Embed(title='Search results',
+                                  description=description,
+                                  color=discord.Color.gold())
             await interaction.followup.edit_message(interaction.message.id, embed=embed, view=None)
         select.callback = select_callback
-        view = View(timeout=120)
+        view = View()
         view.add_item(select)
-        await ctx.send(embed=embed, view=view)
+        message: discord.Message = await ctx.send(embed=embed, view=view)
+        await view.wait()
+        embed = discord.Embed(title='Search results',
+                              description=description,
+                              color=discord.Color.gold())
+        await message.edit(embed=embed, view=None)
 
     @play.command(name='file', aliases=['f'], help='', description='Plays the file attached to the message.\n`[Music]`')
     async def play_file(self, ctx: commands.Context):
