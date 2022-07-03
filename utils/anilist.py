@@ -73,7 +73,7 @@ class MediaInfo:
                 *hex_to_rgb(self._color)
             )
         else:
-            return discord.Embed.Empty
+            return None
 
     @property
     def description(self) -> str:

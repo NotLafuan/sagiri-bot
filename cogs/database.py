@@ -11,9 +11,6 @@ class database(commands.Cog):
         self.client = client
         self.ready: bool = False
         self.server_music: Dict[int, ServerMusic] = {}
-
-    @commands.Cog.listener()
-    async def on_ready(self):
         for guild in self.client.server_info:
             self.server_music[guild] = ServerMusic()
 
@@ -26,5 +23,5 @@ class database(commands.Cog):
         self.server_music.pop(guild.id)
 
 
-def setup(client: commands.Bot):
-    client.add_cog(database(client))
+async def setup(client: commands.Bot):
+    await client.add_cog(database(client))

@@ -22,7 +22,7 @@ class CustomHelpCommand(commands.HelpCommand):
         embed = discord.Embed(color=SILVER)
         embed.set_author(
             name='Help Command',
-            icon_url=self.context.bot.user.avatar_url
+            icon_url=self.context.bot.user.avatar.url
         )
         for cog, _commands in mapping.items():
             if cog and cog.qualified_name != 'database':
@@ -32,7 +32,7 @@ class CustomHelpCommand(commands.HelpCommand):
                 )
                 embed.add_field(name=name, value=value, inline=False)
         embed.set_footer(
-            text=f'Type \'{self.clean_prefix}help <CommandName>\' for details on a command'
+            text=f'Type \'{self.context.clean_prefix}help <CommandName>\' for details on a command'
         )
         await self.get_destination().send(embed=embed)
 
@@ -45,7 +45,7 @@ class CustomHelpCommand(commands.HelpCommand):
         embed = discord.Embed(color=SILVER)
         embed.set_author(
             name='Category',
-            icon_url=self.context.bot.user.avatar_url
+            icon_url=self.context.bot.user.avatar.url
         )
         embed.add_field(name=name, value=value, inline=False)
         await self.get_destination().send(embed=embed)
@@ -55,17 +55,17 @@ class CustomHelpCommand(commands.HelpCommand):
             color=SILVER,
             description='Aliases: ' +
             ', '.join([f'`{alias}`' for alias in group.aliases]
-                      ) if group.aliases else discord.Embed.Empty
+                      ) if group.aliases else None
         )
         embed.set_author(
             name=f'Help Command: {group.name}',
-            icon_url=self.context.bot.user.avatar_url
+            icon_url=self.context.bot.user.avatar.url
         )
         arguments = group.help.split('|')
         descriptions = group.description.split('|')
         for argument, description in zip(arguments, descriptions):
             embed.add_field(
-                name=f'{self.clean_prefix}{group.name} {argument}',
+                name=f'{self.context.clean_prefix}{group.name} {argument}',
                 value=f'{description}\n{EMPTY_CHAR}',
                 inline=False
             )
@@ -77,14 +77,14 @@ class CustomHelpCommand(commands.HelpCommand):
             if command != _commands[-1]:
                 for argument, description in zip(arguments, descriptions):
                     embed.add_field(
-                        name=f'{self.clean_prefix}{group.name} {command.name} {argument}',
+                        name=f'{self.context.clean_prefix}{group.name} {command.name} {argument}',
                         value=f'{description}\n{EMPTY_CHAR}',
                         inline=False
                     )
             else:
                 for argument, description in zip(arguments, descriptions):
                     embed.add_field(
-                        name=f'{self.clean_prefix}{group.name} {command.name} {argument}',
+                        name=f'{self.context.clean_prefix}{group.name} {command.name} {argument}',
                         value=f'{description}',
                         inline=False
                     )
@@ -95,24 +95,24 @@ class CustomHelpCommand(commands.HelpCommand):
             color=SILVER,
             description='Aliases: ' +
             ', '.join([f'`{alias}`' for alias in command.aliases]
-                      ) if command.aliases else discord.Embed.Empty
+                      ) if command.aliases else None
         )
         embed.set_author(
             name=f'Help Command: {command.name}',
-            icon_url=self.context.bot.user.avatar_url
+            icon_url=self.context.bot.user.avatar.url
         )
         arguments = command.help.split('|')
         descriptions = command.description.split('|')
         for argument, description in zip(arguments, descriptions):
             if argument != arguments[-1]:
                 embed.add_field(
-                    name=f'{self.clean_prefix}{command.name} {argument}',
+                    name=f'{self.context.clean_prefix}{command.name} {argument}',
                     value=f'{description}\n{EMPTY_CHAR}',
                     inline=False
                 )
             else:
                 embed.add_field(
-                    name=f'{self.clean_prefix}{command.name} {argument}',
+                    name=f'{self.context.clean_prefix}{command.name} {argument}',
                     value=f'{description}',
                     inline=False
                 )

@@ -68,12 +68,12 @@ class extra(commands.Cog):
         )
         embed.add_field(name='Prediction', value=response)
         embed.set_footer(
-            icon_url=ctx.author.avatar_url,
+            icon_url=ctx.author.avatar.url,
             text=f'Asked by {ctx.author.display_name}'
         )
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
 
-def setup(client: commands.Bot):
-    client.add_cog(extra(client))
+async def setup(client: commands.Bot):
+    await client.add_cog(extra(client))

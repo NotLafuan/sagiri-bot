@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ui import View, Select
 import asyncio
 from time import sleep
 from cogs.database import database
@@ -53,12 +54,11 @@ class music(commands.Cog):
         embed.add_field(name='Playlist Length', value=f'{playlist.duration}')
         embed.add_field(name='Tracks', value=f'{playlist.track_num}')
         embed.set_thumbnail(
-            url=playlist.thumbnail if 'https://' in playlist.thumbnail and '.' in playlist.thumbnail else discord.Embed.Empty
+            url=playlist.thumbnail if 'https://' in playlist.thumbnail and '.' in playlist.thumbnail else None
         )
         return embed
 
     def added_embed(self, song: Song, server_music: ServerMusic):
-        thumbnail = song.thumbnail if song.thumbnail else discord.Embed.Empty
 
         if server_music.vc.is_paused():
             server_music.current_song.reset_time()
@@ -78,12 +78,11 @@ class music(commands.Cog):
         embed.add_field(name='Estimated wait time', value=wait_time)
         embed.add_field(name='Track Length', value=song.duration)
         embed.add_field(name='Position in queue', value=len(server_music))
-        embed.set_thumbnail(url=thumbnail)
+        embed.set_thumbnail(url=song.thumbnail)
         return embed
 
     def song_info_embed(self, pos: int, server_music: ServerMusic):
         song = server_music.queue[pos]
-        thumbnail = song.thumbnail if song.thumbnail else discord.Embed.Empty
 
         embed = discord.Embed(
             title=song.title,
@@ -94,7 +93,7 @@ class music(commands.Cog):
         embed.add_field(name='Position in queue', value=pos+1)
         embed.add_field(name='Links', value=song.links)
 
-        embed.set_thumbnail(url=thumbnail)
+        embed.set_thumbnail(url=song.thumbnail)
         return embed
 
     def current_info_embed(self, server_music: ServerMusic):
@@ -102,7 +101,6 @@ class music(commands.Cog):
             server_music.current_song.reset_time()
 
         song = server_music.current_song
-        thumbnail = song.thumbnail if song.thumbnail else discord.Embed.Empty
 
         embed = discord.Embed(
             title=song.title,
@@ -116,7 +114,7 @@ class music(commands.Cog):
             name='Progress',
             value=server_music.current_song.progress_str
         )
-        embed.set_thumbnail(url=thumbnail)
+        embed.set_thumbnail(url=song.thumbnail)
         return embed
 
     # connect to voice channel
@@ -235,11 +233,43 @@ class music(commands.Cog):
             description=description,
             color=SILVER
         )
-        embed.set_footer(
-            icon_url=ctx.author.avatar_url,
-            text=f'Searched by {ctx.author.display_name}'
-        )
-        message: discord.Message = await ctx.send(embed=embed)
+
+        select = Select(placeholder='Select from the search result.',
+                        max_values=5,
+                        options=[
+                            discord.SelectOption(label=song.title,
+                                                 description=f'[{song.duration}]',
+                                                 value=song.link) for song in results
+                        ])
+
+        async def select_callback(interaction: discord.Interaction):
+            await interaction.response.defer()
+            for value in interaction.data['values']:
+                song = youtube.from_url(value)
+                # Add songs to queue
+                if song:
+                    server_music.queue.append(song)
+                    if not server_music.is_playing:
+                        # join voice channel
+                        connected = await self.connect(ctx)
+                        # play music
+                        if connected:
+                            self.play_loop(ctx)
+                        else:
+                            break
+                    else:
+                        added_embed = self.added_embed(song, server_music)
+                        await ctx.send(embed=added_embed)
+            embed = discord.Embed(
+                title='Search results',
+                description=description,
+                color=discord.Color.gold()
+            )
+            await interaction.followup.edit_message(interaction.message.id, embed=embed, view=None)
+        select.callback = select_callback
+        view = View(timeout=120)
+        view.add_item(select)
+        await ctx.send(embed=embed, view=view)
 
     @play.command(name='file', aliases=['f'], help='', description='Plays the file attached to the message.\n`[Music]`')
     async def play_file(self, ctx: commands.Context):
@@ -362,7 +392,7 @@ class music(commands.Cog):
         if server_music.is_playing:
             if server_music.queue:
                 queue_embed = QueueEmbed(server_music, page)
-                message: discord.Message = await ctx.send(embed=queue_embed.embed)
+                await ctx.send(embed=queue_embed.embed, view=queue_embed.view)
             else:
                 await send_notice(ctx, 'Song queue is empty.', notice_type=WARNING)
         else:
@@ -541,5 +571,5 @@ class music(commands.Cog):
                     server_music.vc.source.volume = vol/100
 
 
-def setup(client: commands.Bot):
-    client.add_cog(music(client))
+async def setup(client: commands.Bot):
+    await client.add_cog(music(client))

@@ -11,7 +11,8 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 client = commands.Bot(
     command_prefix=get_prefix,
     help_command=CustomHelpCommand(),
-    case_insensitive=True
+    case_insensitive=True,
+    intents=discord.Intents.all()
 )
 
 client.server_info = {}
@@ -22,14 +23,14 @@ cogs = ['database',
         'admin',
         'anime',
         'extra']
-for cog in cogs:
-    client.load_extension(f'cogs.{cog}')
 
 
 @client.event
 async def on_ready():
     print(f'{client.user} is ready.')
     load_info(client)
+    for cog in cogs:
+        await client.load_extension(f'cogs.{cog}')
 
 
 @client.event
@@ -49,7 +50,7 @@ async def on_guild_remove(guild: discord.Guild):
 async def load(ctx: commands.Context, cog: str):
     print(f'\n #################### Load {cog} #################### \n')
     try:
-        client.load_extension(f'cogs.{cog}')
+        await client.load_extension(f'cogs.{cog}')
         await ctx.message.add_reaction('✅')
     except Exception as e:
         error = str(e).replace('\'', '`')
@@ -62,7 +63,7 @@ async def load(ctx: commands.Context, cog: str):
 async def unload(ctx: commands.Context, cog: str):
     print(f'\n #################### Unload {cog} #################### \n')
     try:
-        client.unload_extension(f'cogs.{cog}')
+        await client.unload_extension(f'cogs.{cog}')
         await ctx.message.add_reaction('✅')
     except Exception as e:
         error = str(e).replace('\'', '`')
@@ -75,12 +76,12 @@ async def unload(ctx: commands.Context, cog: str):
 async def reload(ctx: commands.Context, cog: str):
     print(f'\n #################### Reload {cog} #################### \n')
     try:
-        client.unload_extension(f'cogs.{cog}')
-        client.load_extension(f'cogs.{cog}')
+        await client.unload_extension(f'cogs.{cog}')
+        await client.load_extension(f'cogs.{cog}')
         await ctx.message.add_reaction('✅')
     except commands.ExtensionNotLoaded:
         try:
-            client.load_extension(f'cogs.{cog}')
+            await client.load_extension(f'cogs.{cog}')
             await ctx.message.add_reaction('✅')
         except Exception as e:
             error = str(e).replace('\'', '`')
@@ -99,12 +100,12 @@ async def reloadall(ctx: commands.Context):
     for cog in cogs:
         if cog != 'database':
             try:
-                client.unload_extension(f'cogs.{cog}')
-                client.load_extension(f'cogs.{cog}')
+                await client.unload_extension(f'cogs.{cog}')
+                await client.load_extension(f'cogs.{cog}')
                 await ctx.message.add_reaction('✅')
             except commands.ExtensionNotLoaded:
                 try:
-                    client.load_extension(f'cogs.{cog}')
+                    await client.load_extension(f'cogs.{cog}')
                     await ctx.message.add_reaction('✅')
                 except Exception as e:
                     error = str(e).replace('\'', '`')

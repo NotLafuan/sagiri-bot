@@ -33,7 +33,7 @@ class anime(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
 
-    @commands.command(aliases=['sch', 'sall'], help='')
+    @commands.command(aliases=['sch', 'sall'], help='<query>', description='Search between `character`, `anime`, and `manga`.\n`[Anime]`')
     async def search(self, ctx: commands.Context, *, query: str):
         infos: list[Optional[MediaInfo | CharacterInfo]] = [
             get_anime(query),
@@ -49,21 +49,21 @@ class anime(commands.Cog):
         else:
             await send_notice(ctx, 'Unable to find anything.')
 
-    @commands.command(name='schar', aliases=['sc'], help='')
+    @commands.command(name='schar', aliases=['sc'], help='<query>', description='Search character.\n`[Anime]`')
     async def search_character(self, ctx: commands.Context, *, query: str):
         if info := get_character(query):
             await ctx.send(embed=info.embed)
         else:
             await send_notice(ctx, 'Unable to find for this character.')
 
-    @commands.command(name='sani', aliases=['sa'], help='')
+    @commands.command(name='sani', aliases=['sa'], help='<query>', description='Search anime.\n`[Anime]`')
     async def search_anime(self, ctx: commands.Context, *, query: str):
         if info := get_anime(query):
             await ctx.send(embed=info.embed)
         else:
             await send_notice(ctx, 'Unable to find for this anime.')
 
-    @commands.command(name='sman', aliases=['sm'], help='')
+    @commands.command(name='sman', aliases=['sm'], help='<query>', description='Search manga.\n`[Anime]`')
     async def search_manga(self, ctx: commands.Context, *, query: str):
         if info := get_manga(query):
             await ctx.send(embed=info.embed)
@@ -71,5 +71,5 @@ class anime(commands.Cog):
             await send_notice(ctx, 'Unable to find for this manga.')
 
 
-def setup(client: commands.Bot):
-    client.add_cog(anime(client))
+async def setup(client: commands.Bot):
+    await client.add_cog(anime(client))

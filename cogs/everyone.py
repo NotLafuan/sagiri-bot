@@ -75,5 +75,5 @@ class everyone(commands.Cog):
         await message.edit(embed=embed)
 
 
-def setup(client: commands.Bot):
-    client.add_cog(everyone(client))
+async def setup(client: commands.Bot):
+    await client.add_cog(everyone(client))

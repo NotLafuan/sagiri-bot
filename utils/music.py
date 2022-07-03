@@ -1,10 +1,13 @@
 from typing import Optional
 import discord
+from discord.ui import View, Button
 import numpy as np
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from cogs.music import music
 
 SILVER: discord.Color = discord.Color.from_rgb(r=203, g=213, b=225)
+
 
 @dataclass(eq=True, order=True)
 class Time:
@@ -43,7 +46,7 @@ class Time:
 
 
 @dataclass
-class Playlist():
+class Playlist:
     title: str
     url: str
     thumbnail: str
@@ -52,7 +55,7 @@ class Playlist():
 
 
 @dataclass
-class Song():
+class Song:
     """Represents a Song.
 
     Attributes
@@ -139,7 +142,7 @@ class Song():
             if self.spurl:
                 links.append(f'[Spotify]({self.spurl})')
             links = ' | '.join(links)
-        return links if links else discord.Embed.Empty
+        return links if links else None
 
     @property
     def link(self) -> str:
@@ -177,7 +180,7 @@ class Song():
 
 
 @dataclass
-class ServerMusic():
+class ServerMusic:
     """Container for managing music in a server.
 
     Attributes
@@ -224,18 +227,56 @@ class ServerMusic():
         self.queue.reverse()
 
 
-@dataclass
-class QueueEmbed():
-    server_music: ServerMusic
-    page: int
-    per_page: int = 10
-    message: Optional[discord.Message] = None
+class QueueEmbed:
+
+    def __init__(self,
+                 server_music: ServerMusic,
+                 page: int,
+                 per_page: int = 10) -> None:
+        self.view: View = self.create_view()
+        self.server_music = server_music
+        self.page = page
+        self.per_page = per_page
 
     def add(self, add: int):
         self.page += add
 
     def set(self, value: int):
         self.page = value
+
+    def create_view(self) -> View:
+        button_first = Button(label='<<')
+        button_backward = Button(label='<')
+        button_forward = Button(label='>')
+        button_last = Button(label='>>')
+
+        async def first_callback(interaction: discord.Interaction):
+            self.set(10**10)
+            await interaction.response.edit_message(embed=self.embed)
+
+        async def backward_callback(interaction: discord.Interaction):
+            self.add(-1)
+            await interaction.response.edit_message(embed=self.embed)
+
+        async def forward_callback(interaction: discord.Interaction):
+            self.add(1)
+            await interaction.response.edit_message(embed=self.embed)
+
+        async def last_callback(interaction: discord.Interaction):
+            self.set(0)
+            await interaction.response.edit_message(embed=self.embed)
+
+        button_first.callback = first_callback
+        button_backward.callback = backward_callback
+        button_forward.callback = forward_callback
+        button_last.callback = last_callback
+
+        view = View()
+        view.add_item(button_first)
+        view.add_item(button_backward)
+        view.add_item(button_forward)
+        view.add_item(button_last)
+        return view
 
     @property
     def embed(self) -> discord.Embed:
@@ -264,3 +305,8 @@ class QueueEmbed():
         embed = discord.Embed(description=text, color=SILVER)
         embed.set_footer(text=footer)
         return embed
+
+class MultiSearchView(View):
+    def __init__(self, *, timeout: Optional[float] = 180, music: music):
+        super().__init__(timeout=timeout)
+        self.music = music

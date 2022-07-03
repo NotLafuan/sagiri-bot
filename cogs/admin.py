@@ -96,5 +96,5 @@ class admin(commands.Cog):
             await send_notice(ctx, 'The bot is currently not in a voice channel.', notice_type=ERROR)
 
 
-def setup(client: commands.Bot):
-    client.add_cog(admin(client))
+async def setup(client: commands.Bot):
+    await client.add_cog(admin(client))
