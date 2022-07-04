@@ -17,6 +17,11 @@ class TicTacToe(View):
         self.current_player = np.random.choice(['X', 'O'])
         self.add_buttons()
 
+    async def on_timeout(self) -> None:
+        embed = discord.Embed(description=f'Match Timeout!',
+                              color=discord.Color.red())
+        await self.message.edit(embed=embed, view=self)
+
     @property
     def buttons(self) -> list[Button]:
         buttons = []
