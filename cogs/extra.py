@@ -74,6 +74,49 @@ class extra(commands.Cog):
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
+    @commands.group(aliases=['ttt'], invoke_without_command=True, help='<user>', description='Create a tictactoe match.\n`[Extra]`')
+    async def tictactoe(self, ctx: commands.Context, user: discord.User):
+        player1 = ctx.author
+        player2 = user
+
+        if not player2.bot:
+            embed = discord.Embed(description=f'{player1.mention} vs {player2.mention}',
+                                  color=SILVER)
+            confirm = Button(label='✔️', style=discord.ButtonStyle.green)
+            decline = Button(label='❌', style=discord.ButtonStyle.red)
+
+            async def confirm_callback(interaction: discord.Interaction):
+                embed = discord.Embed(description=f'{player1.mention} vs {player2.mention} Confirmed!',
+                                      color=SILVER)
+                tictactoe = TicTacToe(player1, player2, interaction.message)
+                await interaction.response.edit_message(embed=tictactoe.turn_embed, view=tictactoe)
+
+            async def decline_callback(interaction: discord.Interaction):
+                embed = discord.Embed(description=f'{player1.mention} vs {player2.mention} Cancelled.',
+                                      color=SILVER)
+                await interaction.response.edit_message(embed=embed, view=None)
+            confirm.callback = confirm_callback
+            decline.callback = decline_callback
+            view = View()
+            view.add_item(confirm)
+            view.add_item(decline)
+            await ctx.send(embed=embed, view=view)
+        else:
+            await send_notice(ctx, 'Cannot play with bot.')
+
+    @tictactoe.command(name='ai', aliases=['bot'], help='', description='Tictactoe against Sagiri.\n`[Extra]`')
+    async def tictactoe_ai(self, ctx: commands.Context):
+        player1 = ctx.author
+        player2 = self.client.user
+
+        embed = discord.Embed(description=f'{player1.mention} vs {player2.mention}',
+                              color=SILVER)
+        message: discord.Message = await ctx.send(embed=embed)
+        tictactoe = TicTacToe(player1, player2, message)
+        if tictactoe.current_user == player2:
+            await tictactoe.ai_turn()
+        await message.edit(embed=tictactoe.turn_embed, view=tictactoe)
+
 
 async def setup(client: commands.Bot):
     await client.add_cog(extra(client))
