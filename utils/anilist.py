@@ -88,11 +88,12 @@ class MediaInfo:
                             .replace('<br>', '')
                             .replace('__', '**'))
         # char limit
-        if len(description) > 1000:
-            if (description[:997].count('||') % 2) == 0:
-                return description[:997] + '...'
+        limit = 350
+        if len(description) > limit:
+            if (description[:limit-3].count('||') % 2) == 0:
+                return description[:limit-3] + '...'
             else:
-                return description[:997] + '...||'
+                return description[:limit-3] + '...||'
         else:
             return description
 
@@ -167,11 +168,12 @@ class CharacterInfo:
                             .replace('<br>', '')
                             .replace('__', '**'))
         # char limit
-        if len(description) > 1000:
-            if (description[:997].count('||') % 2) == 0:
-                return description[:997] + '...'
+        limit = 350
+        if len(description) > limit:
+            if (description[:limit-3].count('||') % 2) == 0:
+                return description[:limit-3] + '...'
             else:
-                return description[:997] + '...||'
+                return description[:limit-3] + '...||'
         else:
             return description
 
