@@ -52,19 +52,19 @@ class Name:
 class MediaInfo:
     type: str
     url: str
-    image: str
+    id: int
     _color: str
     title: Title
     _description: str
     format: str
-    episodes: int
-    _chapters: int
     _status: str
-    _averageScore: int
     _source: str
-    _genres: list[str]
     popularity: int
     is_adult: bool
+
+    @property
+    def image(self) -> str:
+        return f'https://img.anili.st/media/{self.id}'
 
     @property
     def color(self) -> discord.Color:
@@ -98,24 +98,8 @@ class MediaInfo:
             return description
 
     @property
-    def genres(self) -> str:
-        lines_group = [self._genres[i:i+2]
-                       for i in range(0, len(self._genres), 2)]
-        lines = [', '.join(line) for line in lines_group]
-        text = ',\n'.join(lines)
-        return text if text else '`null`'
-
-    @property
-    def chapters(self) -> str:
-        return self._chapters if self._chapters else '`null`'
-
-    @property
     def status(self) -> str:
-        return self._status.title() if self._status else '`null`'
-
-    @property
-    def averageScore(self) -> str:
-        return f'{self._averageScore}%' if self._averageScore else '`null`'
+        return self._status.title().replace('_', ' ') if self._status else '`null`'
 
     @property
     def source(self) -> str:
@@ -130,14 +114,14 @@ class MediaInfo:
             color=self.color
         )
         embed.add_field(name='Format', value=self.format)
-        if self.type == 'ANIME':
-            embed.add_field(name='Episodes', value=self.episodes)
-        elif self.type == 'MANGA':
-            embed.add_field(name='Chapters', value=self.chapters)
+        # if self.type == 'ANIME':
+        #     embed.add_field(name='Episodes', value=self.episodes)
+        # elif self.type == 'MANGA':
+        #     embed.add_field(name='Chapters', value=self.chapters)
         embed.add_field(name='Status', value=self.status)
-        embed.add_field(name='Average Score',
-                        value=self.averageScore)
-        embed.add_field(name='Genres', value=self.genres)
+        # embed.add_field(name='Average Score',
+        #                 value=self.averageScore)
+        # embed.add_field(name='Genres', value=self.genres)
         embed.add_field(name='Source', value=self.source)
         embed.set_image(url=self.image)
         return embed
@@ -257,17 +241,13 @@ def get_media_info(result: dict) -> MediaInfo:
     info = MediaInfo(
         media['type'],
         media['siteUrl'],
-        media['coverImage']['extraLarge'],
+        media['id'],
         media['coverImage']['color'],
         title,
         media['description'],
         media['format'],
-        media['episodes'],
-        media['chapters'],
         media['status'],
-        media['averageScore'],
         media['source'],
-        media['genres'],
         media['popularity'],
         media['isAdult']
     )
@@ -303,10 +283,9 @@ def get_character_info(result: dict) -> CharacterInfo:
 
 def get_animanga(search: str, is_adult: bool = False) -> MediaInfo:
     query = ('query($search:String,$is_adult:Boolean){Media(search:$search,'
-             'isAdult:$is_adult){type siteUrl coverImage{extraLarge color}t'
-             'itle{romaji english native userPreferred}description format e'
-             'pisodes chapters status averageScore source genres popularity'
-             ' isAdult}}')
+             'isAdult:$is_adult){id type siteUrl coverImage{extraLarge colo'
+             'r}title{romaji english native userPreferred}description forma'
+             't status source popularity isAdult}}')
     variables = {
         'search': search,
         'is_adult': is_adult,
@@ -316,10 +295,9 @@ def get_animanga(search: str, is_adult: bool = False) -> MediaInfo:
 
 
 def get_animanga_from_id(id: int) -> MediaInfo:
-    query = ('query($id:Int){Media(id:$id){type siteUrl coverImage{extraLar'
-             'ge color}title{romaji english native userPreferred}descriptio'
-             'n format episodes chapters status averageScore source genres '
-             'popularity isAdult}}')
+    query = ('query($id:Int){Media(id:$id){id type siteUrl coverImage{extra'
+             'Large color}title{romaji english native userPreferred}descrip'
+             'tion format status source popularity isAdult}}')
     variables = {
         'id': id,
     }
@@ -329,10 +307,10 @@ def get_animanga_from_id(id: int) -> MediaInfo:
 
 def get_anime(search: str, is_adult: bool = False) -> MediaInfo:
     query = ('query($search:String,$is_adult:Boolean){Media(search:$search,'
-             'type:ANIME,isAdult:$is_adult){type siteUrl coverImage{extraLa'
-             'rge color}title{romaji english native userPreferred}descripti'
-             'on format episodes chapters status averageScore source genres'
-             ' popularity isAdult}}')
+             'type:ANIME,isAdult:$is_adult){id type siteUrl coverImage{extr'
+             'aLarge color}title{romaji english native userPreferred}descri'
+             'ption format status source popularity isAdult}}')
+
     variables = {
         'search': search,
         'is_adult': is_adult,
@@ -343,10 +321,9 @@ def get_anime(search: str, is_adult: bool = False) -> MediaInfo:
 
 def get_manga(search: str, is_adult: bool = False) -> MediaInfo:
     query = ('query($search:String,$is_adult:Boolean){Media(search:$search,'
-             'type:MANGA,isAdult:$is_adult){type siteUrl coverImage{extraLa'
-             'rge color}title{romaji english native userPreferred}descripti'
-             'on format episodes chapters status averageScore source genres'
-             ' popularity isAdult}}')
+             'type:MANGA,isAdult:$is_adult){id type siteUrl coverImage{extr'
+             'aLarge color}title{romaji english native userPreferred}descri'
+             'ption format status source popularity isAdult}}')
     variables = {
         'search': search,
         'is_adult': is_adult,
