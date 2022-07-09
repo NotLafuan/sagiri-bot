@@ -20,9 +20,9 @@ client.server_info = {}
 cogs = ['database',
         'everyone',
         'music',
-        'admin',
         'anime',
-        'extra']
+        'extra',
+        'admin']
 
 
 @client.event

@@ -99,7 +99,7 @@ class MediaInfo:
 
     @property
     def status(self) -> str:
-        return self._status.title().replace('_', ' ') if self._status else '`null`'
+        return self._status.replace('_', ' ').title() if self._status else '`null`'
 
     @property
     def source(self) -> str:
@@ -194,7 +194,7 @@ class CharacterInfo:
 
     @property
     def origin(self) -> str:
-        return f'[{self.media.title.preferred}]({self.media.url}) `[{self.media.format}]`'
+        return f'[{self.media.title.preferred}]({self.media.url}) `[{self.media.format.replace("_", " ")}]`'
 
     @property
     def embed(self) -> discord.Embed:
