@@ -1,10 +1,8 @@
-import discord
-from discord.ext import commands
+from utils import *
 from discord.ui import View, Select
 import asyncio
 from time import sleep
 from cogs.database import database
-from utils import *
 
 
 class music(commands.Cog):

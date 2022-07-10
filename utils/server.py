@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 from dataclasses import dataclass
+from json import load, dump
 from itertools import cycle
-import json
 from typing import Mapping, Optional
 
 ERROR = 'error'
@@ -155,7 +155,7 @@ class ServerInfo():
 
 def load_info(client: commands.Bot, filename: str = 'server_info.json'):
     with open(filename, 'r') as f:
-        server_info = json.load(f)
+        server_info = load(f)
 
     for guild in client.guilds:
         if str(guild.id) in server_info:
@@ -178,7 +178,7 @@ def save_info(client: commands.Bot, filename: str = 'server_info.json'):
         }
 
     with open(filename, 'w+') as f:
-        json.dump(save_dict, f, indent=4, ensure_ascii=False)
+        dump(save_dict, f, indent=4, ensure_ascii=False)
 
 
 def add_info(client: commands.Bot, guild: discord.Guild):

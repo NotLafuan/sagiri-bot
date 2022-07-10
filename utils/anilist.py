@@ -1,8 +1,8 @@
-from typing import Optional
-from dataclasses import dataclass
-import requests
 import discord
+import requests
 import html
+from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass

@@ -1,8 +1,8 @@
 import subprocess
 import os
 import yt_dlp
-from typing import Literal, Optional
 from .music import Song, Playlist, Time
+from typing import Literal, Optional
 
 
 # spotify

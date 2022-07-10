@@ -1,6 +1,5 @@
-from discord.ext import commands
-from math import sqrt, pow, exp
 from utils import *
+from math import sqrt, pow, exp
 
 import spacy
 nlp = spacy.load('en_core_web_sm')

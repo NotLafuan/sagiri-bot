@@ -1,9 +1,7 @@
-import discord
-from discord.ext import commands
+from utils import *
 from typing import Dict
 from datetime import datetime, timedelta
 from cogs.database import database
-from utils import *
 
 
 class admin(commands.Cog):

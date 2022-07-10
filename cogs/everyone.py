@@ -1,7 +1,5 @@
-import discord
-from discord.ext import commands
-import time
 from utils import *
+from time import perf_counter
 
 DEVELOPER_ID = 319485284465115147
 
@@ -65,9 +63,9 @@ class everyone(commands.Cog):
 
     @ping.command(name='ws', aliases=['websocket'], help='', description='Shows the websocket latency of the bot.\n`[Everyone]`')
     async def ping_ws(self, ctx: commands.Context):
-        start_time = time.perf_counter()
+        start_time = perf_counter()
         message = await send_notice(ctx, f'Pong!', notice_type=MESSAGE)
-        ping = (time.perf_counter() - start_time) * 1000
+        ping = (perf_counter() - start_time) * 1000
         embed = discord.Embed(
             description=f'Pong! `{int(ping)}ms`',
             color=SILVER

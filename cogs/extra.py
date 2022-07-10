@@ -1,7 +1,5 @@
-import discord
-from discord.ext import commands
-import numpy as np
 from utils import *
+import numpy as np
 
 
 class extra(commands.Cog):
