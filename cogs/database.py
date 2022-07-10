@@ -3,8 +3,6 @@ from discord.ext import commands
 from utils import ServerMusic
 from typing import Dict
 
-SILVER: discord.Color = discord.Color.from_rgb(r=203, g=213, b=225)
-
 
 class database(commands.Cog):
     def __init__(self, client: commands.Bot):
