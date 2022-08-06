@@ -13,6 +13,8 @@ SILVER: discord.Color = discord.Color.from_rgb(r=203, g=213, b=225)
 
 EMPTY_CHAR = '‎'
 
+activity = discord.Activity(type=discord.ActivityType.listening, name=".help")
+
 
 class CustomHelpCommand(commands.HelpCommand):
     def __init__(self):

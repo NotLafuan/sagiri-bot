@@ -11,6 +11,7 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 client = commands.Bot(
     command_prefix=get_prefix,
     help_command=CustomHelpCommand(),
+    activity=activity,
     case_insensitive=True,
     intents=discord.Intents.all()
 )
