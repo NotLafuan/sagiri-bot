@@ -191,27 +191,27 @@ class music(commands.Cog):
     @commands.group(aliases=['p'], invoke_without_command=True, help='<song name/url>', description='Plays a song.\n`[Music]`')
     async def play(self, ctx: commands.Context, *, query: str):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
-        # search song from query
-        songs, playlist = search(query)
-        if playlist:
-            embed = self.playlist_embed(playlist)
-            await ctx.send(embed=embed)
+        # join voice channel
+        connected = await self.connect(ctx)
+        if connected:
+            # search song from query
+            songs, playlist = search(query)
+            if playlist:
+                embed = self.playlist_embed(playlist)
+                await ctx.send(embed=embed)
 
-        # Add songs to queue
-        if songs:
-            server_music.queue += songs
-            if not server_music.is_playing:
-                # join voice channel
-                connected = await self.connect(ctx)
-                # play music
-                if connected:
+            # Add songs to queue
+            if songs:
+                server_music.queue += songs
+                if not server_music.is_playing:
+                    # play music
                     self.play_loop(ctx)
+                else:
+                    if not playlist:
+                        embed = self.added_embed(songs[0], server_music)
+                        await ctx.send(embed=embed)
             else:
-                if not playlist:
-                    embed = self.added_embed(songs[0], server_music)
-                    await ctx.send(embed=embed)
-        else:
-            await send_notice(ctx, 'Could not play song.')
+                await send_notice(ctx, 'Could not play song.')
 
     @play.command(name='search', aliases=['sc'], help='<song name>', description='Searches and lets you choose a song.\n`[Music]`')
     async def play_search(self, ctx: commands.Context, *, query: str):
@@ -273,29 +273,29 @@ class music(commands.Cog):
     async def play_file(self, ctx: commands.Context):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         message: discord.Message = ctx.message
-        if message.attachments:
-            attachment = message.attachments[0]
-            try:
-                songs, playlist = search(attachment.url)
-                # Add songs to queue
-                if songs:
-                    server_music.queue += songs
-                    if not server_music.is_playing:
-                        # join voice channel
-                        connected = await self.connect(ctx)
-                        # play music
-                        if connected:
+        # join voice channel
+        connected = await self.connect(ctx)
+        if connected:
+            if message.attachments:
+                attachment = message.attachments[0]
+                try:
+                    songs, playlist = search(attachment.url)
+                    # Add songs to queue
+                    if songs:
+                        server_music.queue += songs
+                        if not server_music.is_playing:
+                            # play music
                             self.play_loop(ctx)
+                        else:
+                            if not playlist:
+                                embed = self.added_embed(songs[0], server_music)
+                                await ctx.send(embed=embed)
                     else:
-                        if not playlist:
-                            embed = self.added_embed(songs[0], server_music)
-                            await ctx.send(embed=embed)
-                else:
-                    await send_notice(ctx, 'Could not play song.')
-            except Exception as e:
-                await send_notice(ctx, str(e))
-        else:
-            await send_notice(ctx, 'No file provided.')
+                        await send_notice(ctx, 'Could not play song.')
+                except Exception as e:
+                    await send_notice(ctx, str(e))
+            else:
+                await send_notice(ctx, 'No file provided.')
 
     @commands.command(aliases=['break'], help='', description='Pauses the current playing song.\n`[Music]`')
     async def pause(self, ctx: commands.Context):
