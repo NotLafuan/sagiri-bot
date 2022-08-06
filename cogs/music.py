@@ -120,8 +120,16 @@ class music(commands.Cog):
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
         if not server_music.vc:
             if ctx.author.voice:
-                server_music.vc = await ctx.author.voice.channel.connect()
-                return True
+                try:
+                    server_music.vc = await ctx.author.voice.channel.connect()
+                    return True
+                except Exception as e:
+                    if isinstance(e, discord.ClientException) and str(e) == 'Already connected to a voice channel.':
+                        server_music.vc = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+                        return True
+                    else:
+                        await send_notice(ctx, 'Failed to connect to a voice channel.')
+                        return False
             else:
                 await send_notice(ctx, 'You\'re not in a voice channel.')
                 return False
