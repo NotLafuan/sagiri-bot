@@ -59,21 +59,21 @@ class admin(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def clean(self, ctx: commands.Context):
         await ctx.message.delete()
-        deleted = await ctx.channel.purge(check=self.check, after=datetime.utcnow()-timedelta(days=14))
+        deleted = await ctx.channel.purge(check=self.check, after=datetime.utcnow()-timedelta(days=14), oldest_first=False)
         await send_notice(ctx, f'Cleaning up `{len(deleted)}` messages.', notice_type=MESSAGE, delay=10)
 
     @clean.command(name='all', help='<amount>', description='Clear all messages for pass 14 days.\n`[Manage Messages]`')
     @commands.has_permissions(manage_messages=True)
     async def clean_all(self, ctx: commands.Context, limit: int = 100):
         await ctx.message.delete()
-        deleted = await ctx.channel.purge(limit=limit, after=datetime.utcnow()-timedelta(days=14))
+        deleted = await ctx.channel.purge(limit=limit, after=datetime.utcnow()-timedelta(days=14), oldest_first=False)
         await send_notice(ctx, f'Cleaning up `{len(deleted)}` messages.', notice_type=MESSAGE, delay=10)
 
     @clean.command(name='purge', help='<amount>', description='Clear all messages.\n*Slower than **clean all***\n`[Manage Messages]`')
     @commands.has_permissions(manage_messages=True)
     async def clean_purge(self, ctx: commands.Context, limit: int = 100):
         await ctx.message.delete()
-        deleted = await ctx.channel.purge(limit=limit)
+        deleted = await ctx.channel.purge(limit=limit, oldest_first=False)
         await send_notice(ctx, f'Cleaning up `{len(deleted)}` messages.', notice_type=MESSAGE, delay=10)
 
     @commands.command(aliases=['summon', 'connect'], help='', description='Makes the bot join your voice channel.\n`[Admin]`')
