@@ -125,7 +125,8 @@ class music(commands.Cog):
                     return True
                 except Exception as e:
                     if isinstance(e, discord.ClientException) and str(e) == 'Already connected to a voice channel.':
-                        server_music.vc = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+                        server_music.vc = discord.utils.get(self.client.voice_clients,
+                                                            guild=ctx.guild)
                         return True
                     else:
                         await send_notice(ctx, 'Failed to connect to a voice channel.')
@@ -296,7 +297,10 @@ class music(commands.Cog):
                             self.play_loop(ctx)
                         else:
                             if not playlist:
-                                embed = self.added_embed(songs[0], server_music)
+                                embed = self.added_embed(
+                                    songs[0],
+                                    server_music
+                                )
                                 await ctx.send(embed=embed)
                     else:
                         await send_notice(ctx, 'Could not play song.')
