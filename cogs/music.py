@@ -118,8 +118,8 @@ class music(commands.Cog):
     # connect to voice channel
     async def connect(self, ctx: commands.Context) -> bool:
         server_music: ServerMusic = self.database.server_music[ctx.guild.id]
-        if not server_music.vc:
-            if ctx.author.voice:
+        if ctx.author.voice:
+            if not server_music.vc:
                 try:
                     server_music.vc = await ctx.author.voice.channel.connect()
                     return True
@@ -132,11 +132,11 @@ class music(commands.Cog):
                         await send_notice(ctx, 'Failed to connect to a voice channel.')
                         return False
             else:
-                await send_notice(ctx, 'You\'re not in a voice channel.')
-                return False
+                await server_music.vc.move_to(ctx.author.voice.channel)
+                return True
         else:
-            await server_music.vc.move_to(ctx.author.voice.channel)
-            return True
+            await send_notice(ctx, 'You\'re not in a voice channel.')
+            return False
 
     # play loop
     def play_loop(self, ctx: commands.Context):
