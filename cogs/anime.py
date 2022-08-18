@@ -53,21 +53,21 @@ class anime(commands.Cog):
         if info := get_character(query):
             await ctx.send(embed=info.embed)
         else:
-            await send_notice(ctx, 'Unable to find for this character.')
+            await send_notice(ctx, 'Unable to find this character.')
 
     @commands.command(name='sani', aliases=['sa'], help='<query>', description='Search anime.\n`[Anime]`')
     async def search_anime(self, ctx: commands.Context, *, query: str):
         if info := get_anime(query):
             await ctx.send(embed=info.embed)
         else:
-            await send_notice(ctx, 'Unable to find for this anime.')
+            await send_notice(ctx, 'Unable to find this anime.')
 
     @commands.command(name='sman', aliases=['sm'], help='<query>', description='Search manga.\n`[Anime]`')
     async def search_manga(self, ctx: commands.Context, *, query: str):
         if info := get_manga(query):
             await ctx.send(embed=info.embed)
         else:
-            await send_notice(ctx, 'Unable to find for this manga.')
+            await send_notice(ctx, 'Unable to find this manga.')
 
 
 async def setup(client: commands.Bot):
