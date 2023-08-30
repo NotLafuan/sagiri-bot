@@ -110,7 +110,6 @@ class Song:
     @property
     def progress_bar(self, width: int = 17, fill: str = '▬', url: str = 'https://anilist.co/character/89576/Sagiri-Izumi'):
         progress = float(self.progress/self.duration)
-        # 0 <= progress <= 1
         progress = min(1, max(0, progress))
         whole_width = int(np.round(progress * width))
         remainder_width = width - whole_width
@@ -226,7 +225,6 @@ class ServerMusic:
 
 
 class QueueEmbed:
-
     def __init__(self,
                  server_music: ServerMusic,
                  page: int,
@@ -268,7 +266,6 @@ class QueueEmbed:
         button_backward.callback = backward_callback
         button_forward.callback = forward_callback
         button_last.callback = last_callback
-
         view = View()
         view.add_item(button_first)
         view.add_item(button_backward)
@@ -280,11 +277,9 @@ class QueueEmbed:
     def embed(self) -> discord.Embed:
         queue_len = len(self.server_music.queue)
         page_len = int(np.ceil(queue_len/self.per_page))
-
         # loop page
         self.page = page_len if self.page < 1 else self.page
         self.page = 1 if self.page > page_len else self.page
-
         # cut the queue
         lower_bound = (self.page - 1) * self.per_page
         upper_bound = (self.page) * self.per_page
@@ -292,14 +287,12 @@ class QueueEmbed:
             songs = self.server_music.queue[lower_bound:]
         else:
             songs = self.server_music.queue[lower_bound:upper_bound]
-
         # generate text
         first_num = ((self.page - 1) * self.per_page) + 1
         text = ''
         for i, song in enumerate(songs):
             text += f'{first_num+i}. {song.title} [{song.duration}]\n'
         footer = f'Page {self.page}/{page_len}'
-
         embed = discord.Embed(description=text, color=SILVER)
         embed.set_footer(text=footer)
         return embed

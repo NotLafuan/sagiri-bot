@@ -8,7 +8,6 @@ class extra(commands.Cog):
 
     @commands.command(name='8ball', aliases=['8_ball', '8', 'ball', '🎱'], help='<question>', description='Ask Sagiri to do prediction.\n`[Extra]`')
     async def _8ball(self, ctx: commands.Context, *, question: str):
-        # responses
         yeses = [
             'It is certain.',
             'It is decidedly so.',
@@ -47,13 +46,11 @@ class extra(commands.Cog):
         else:
             response = np.random.choice(idks)
 
-        # question bar
         empty_length = 37 - len(question)
         if empty_length > 0:
             question = question + ' '*empty_length
         question = f'`{question}`'
 
-        # response bar
         empty_length = 37 - len(response)
         if empty_length > 0:
             response = response + ' '*empty_length
@@ -77,30 +74,30 @@ class extra(commands.Cog):
         player1 = ctx.author
         player2 = user
 
-        if not player2.bot:
-            embed = discord.Embed(description=f'{player1.mention} vs {player2.mention}',
-                                  color=SILVER)
-            confirm = Button(label='✔️', style=discord.ButtonStyle.green)
-            decline = Button(label='❌', style=discord.ButtonStyle.red)
-
-            async def confirm_callback(interaction: discord.Interaction):
-                embed = discord.Embed(description=f'{player1.mention} vs {player2.mention} Confirmed!',
-                                      color=SILVER)
-                tictactoe = TicTacToe(player1, player2, interaction.message)
-                await interaction.response.edit_message(embed=tictactoe.turn_embed, view=tictactoe)
-
-            async def decline_callback(interaction: discord.Interaction):
-                embed = discord.Embed(description=f'{player1.mention} vs {player2.mention} Cancelled.',
-                                      color=SILVER)
-                await interaction.response.edit_message(embed=embed, view=None)
-            confirm.callback = confirm_callback
-            decline.callback = decline_callback
-            view = View()
-            view.add_item(confirm)
-            view.add_item(decline)
-            await ctx.send(embed=embed, view=view)
-        else:
+        if player2.bot:
             await send_notice(ctx, 'Cannot play with bot.')
+            return
+        embed = discord.Embed(description=f'{player1.mention} vs {player2.mention}',
+                                color=SILVER)
+        confirm = Button(label='✔️', style=discord.ButtonStyle.green)
+        decline = Button(label='❌', style=discord.ButtonStyle.red)
+
+        async def confirm_callback(interaction: discord.Interaction):
+            embed = discord.Embed(description=f'{player1.mention} vs {player2.mention} Confirmed!',
+                                    color=SILVER)
+            tictactoe = TicTacToe(player1, player2, interaction.message)
+            await interaction.response.edit_message(embed=tictactoe.turn_embed, view=tictactoe)
+
+        async def decline_callback(interaction: discord.Interaction):
+            embed = discord.Embed(description=f'{player1.mention} vs {player2.mention} Cancelled.',
+                                    color=SILVER)
+            await interaction.response.edit_message(embed=embed, view=None)
+        confirm.callback = confirm_callback
+        decline.callback = decline_callback
+        view = View()
+        view.add_item(confirm)
+        view.add_item(decline)
+        await ctx.send(embed=embed, view=view)
 
     @tictactoe.command(name='ai', aliases=['bot'], help='', description='Tictactoe against Sagiri.\n`[Extra]`')
     async def tictactoe_ai(self, ctx: commands.Context):

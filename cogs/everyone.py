@@ -13,7 +13,6 @@ class everyone(commands.Cog):
         if message.content == self.client.user.mention:
             prefix = get_prefix(self.client, message)
             developer = await self.client.fetch_user(DEVELOPER_ID)
-
             title = 'Server settings information'
             text = f'''Server prefix: `{prefix}`
             Server ID: `{message.guild.id}`
@@ -21,7 +20,6 @@ class everyone(commands.Cog):
             Join a voice channel and `{prefix}play` a song.
             Type `{prefix}help` for the list of commands.'''
             # [Invite]({INVITE_LINK})
-
             embed = discord.Embed(title=title, description=text, color=SILVER)
             embed.set_footer(text=f'Developed by {developer}')
             await message.channel.send(embed=embed)

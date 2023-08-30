@@ -1,14 +1,13 @@
 import discord
 from discord.ui import View, Button
 import numpy as np
-import time
-from typing import Optional
+from time import sleep
 
 EMPTY_CHAR: str = '‎'
 
 
 class TicTacToe(View):
-    def __init__(self, player1: discord.User, player2: discord.User, message: discord.Message, timeout: Optional[float] = 180):
+    def __init__(self, player1: discord.User, player2: discord.User, message: discord.Message, timeout: float | None = 180):
         super().__init__(timeout=timeout)
         self.player1 = player1
         self.player2 = player2
@@ -27,11 +26,10 @@ class TicTacToe(View):
         buttons = []
         for index in range(9):
             row, col = self.index_to_row_column(index)
-            if elem := self.board[row][col]:
-                label = self.board[row][col]
-                if elem == 'X':
+            if label := self.board[row][col]:
+                if label == 'X':
                     style = discord.ButtonStyle.red
-                elif elem == 'O':
+                elif label == 'O':
                     style = discord.ButtonStyle.blurple
             else:
                 label = EMPTY_CHAR
@@ -80,7 +78,6 @@ class TicTacToe(View):
                     break
             if win:
                 return win
-
         # checking columns
         for i in range(3):
             win = True
@@ -90,7 +87,6 @@ class TicTacToe(View):
                     break
             if win:
                 return win
-
         # checking diagonals
         win = True
         for i in range(3):
@@ -99,7 +95,6 @@ class TicTacToe(View):
                 break
         if win:
             return win
-
         win = True
         for i in range(3):
             if board[i][3 - 1 - i] != player:
@@ -129,7 +124,6 @@ class TicTacToe(View):
 
     def is_player_almost_win(self, player: str, opponent: str) -> int:
         almost_win = 0
-
         # checking rows
         for i in range(3):
             player_amount = 0
@@ -141,7 +135,6 @@ class TicTacToe(View):
                     opponent_amount += 1
             if player_amount == 2 and opponent_amount != 1:
                 almost_win += 1
-
         # checking columns
         for i in range(3):
             player_amount = 0
@@ -153,7 +146,6 @@ class TicTacToe(View):
                     opponent_amount += 1
             if player_amount == 2 and opponent_amount != 1:
                 almost_win += 1
-
         # checking diagonals
         player_amount = 0
         opponent_amount = 0
@@ -164,7 +156,6 @@ class TicTacToe(View):
                 opponent_amount += 1
         if player_amount == 2 and opponent_amount != 1:
             almost_win += 1
-
         player_amount = 0
         opponent_amount = 0
         for i in range(3):
@@ -174,7 +165,6 @@ class TicTacToe(View):
                 opponent_amount += 1
         if player_amount == 2 and opponent_amount != 1:
             almost_win += 1
-
         return almost_win
 
     def evaluation(self, board: list[list]) -> int:
@@ -192,7 +182,6 @@ class TicTacToe(View):
     def minimax(self, board: list[list], depth: int, alpha: float, beta: float, maximizing_player: bool):
         if self.is_player_win('X', board) or self.is_player_win('O', board) or self.is_board_filled(board):
             return self.evaluation(board)
-
         if maximizing_player:
             max_eval = -np.inf
             for child in self.children_of(board, maximizing_player):
@@ -206,7 +195,6 @@ class TicTacToe(View):
             if depth == 0:
                 return best_board
             return max_eval
-
         else:
             min_eval = +np.inf
             for child in self.children_of(board, maximizing_player):
@@ -224,59 +212,47 @@ class TicTacToe(View):
                 return i
 
     async def button_interaction(self, interaction: discord.Interaction):
-        if interaction.user == self.current_user:
-            row, col = self.index_to_row_column(
-                int(interaction.data['custom_id']))
-            if self.board[row][col]:
-                await interaction.response.send_message(
-                    content='Spot choosen.', ephemeral=True)
-            else:
-                self.fix_spot(row, col)
-                self.add_buttons()
-                # checking whether current player won or not
-                if self.is_player_win(self.current_player, self.board):
-                    embed = discord.Embed(description=f'{self.current_user.mention} wins the game!',
-                                          color=discord.Color.green())
-                    self.stop()
-                    await interaction.response.edit_message(embed=embed, view=self)
-
-                # checking whether the game draw or not
-                elif self.is_board_filled(self.board):
-                    embed = discord.Embed(description=f'Match Draw!',
-                                          color=discord.Color.gold())
-                    self.stop()
-                    await interaction.response.edit_message(embed=embed, view=self)
-
-                else:
-                    # swapping the turn
-                    self.swap_player()
-                    # show turn
-                    await interaction.response.edit_message(embed=self.turn_embed, view=self)
-                    # bot turn
-                    if self.current_user.bot:
-                        await self.ai_turn()
-                        time.sleep(0.5)
-        else:
+        if interaction.user != self.current_user:
+            await interaction.response.send_message(content='Not your turn.', ephemeral=True)
+            return
+        row, col = self.index_to_row_column(
+            int(interaction.data['custom_id']))
+        if self.board[row][col]:
             await interaction.response.send_message(
-                content='Not your turn.', ephemeral=True)
+                content='Spot choosen.', ephemeral=True)
+            return
+        self.fix_spot(row, col)
+        self.add_buttons()
+        if self.is_player_win(self.current_player, self.board):
+            embed = discord.Embed(description=f'{self.current_user.mention} wins the game!',
+                                  color=discord.Color.green())
+            self.stop()
+            await interaction.response.edit_message(embed=embed, view=self)
+        elif self.is_board_filled(self.board):
+            embed = discord.Embed(description=f'Match Draw!',
+                                  color=discord.Color.gold())
+            self.stop()
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            self.swap_player()
+            await interaction.response.edit_message(embed=self.turn_embed, view=self)
+            if self.current_user.bot:
+                await self.ai_turn()
+                sleep(0.5)
 
     async def ai_turn(self):
         self.board = self.minimax(self.board, 0, -np.inf, +np.inf, True)
         self.add_buttons()
-        # checking whether bot won or not
         if self.is_player_win(self.current_player, self.board):
             embed = discord.Embed(description=f'{self.current_user.mention} wins the game!',
                                   color=discord.Color.green())
             self.stop()
             await self.message.edit(embed=embed, view=self)
-        # checking whether the game draw or not
         elif self.is_board_filled(self.board):
             embed = discord.Embed(description=f'Match Draw!',
                                   color=discord.Color.gold())
             self.stop()
             await self.message.edit(embed=embed, view=self)
         else:
-            # swapping the turn
             self.swap_player()
-            # show turn
             await self.message.edit(embed=self.turn_embed, view=self)

@@ -3,7 +3,7 @@ from discord.ext import commands
 from dataclasses import dataclass
 from json import load, dump
 from itertools import cycle
-from typing import Mapping, Optional
+from typing import Mapping
 
 ERROR = 'error'
 WARNING = 'warning'
@@ -20,7 +20,7 @@ class CustomHelpCommand(commands.HelpCommand):
     def __init__(self):
         super().__init__()
 
-    async def send_bot_help(self, mapping: Mapping[Optional[commands.Cog], list[commands.Command]]):
+    async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command]]):
         embed = discord.Embed(color=SILVER)
         embed.set_author(
             name='Help Command',
@@ -71,7 +71,6 @@ class CustomHelpCommand(commands.HelpCommand):
                 value=f'{description}\n{EMPTY_CHAR}',
                 inline=False
             )
-
         _commands: list[commands.Command] = list(group.commands)
         for command in _commands:
             arguments = command.help.split('|')
@@ -158,27 +157,23 @@ class ServerInfo():
 def load_info(client: commands.Bot, filename: str = 'server_info.json'):
     with open(filename, 'r') as f:
         server_info = load(f)
-
     for guild in client.guilds:
         if str(guild.id) in server_info:
             properties = server_info[str(guild.id)]
             client.server_info[guild.id] = ServerInfo(**properties)
         else:
             client.server_info[guild.id] = ServerInfo('.', 100., 'off')
-
     save_info(client)
 
 
 def save_info(client: commands.Bot, filename: str = 'server_info.json'):
     save_dict: dict = {}
-
     for guild in client.server_info:
         save_dict[guild] = {
             'prefix': client.server_info[guild].prefix,
             'volume': client.server_info[guild].volume,
             'loop': client.server_info[guild].loop,
         }
-
     with open(filename, 'w+') as f:
         dump(save_dict, f, indent=4, ensure_ascii=False)
 

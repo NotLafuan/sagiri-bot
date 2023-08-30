@@ -2,7 +2,7 @@ import subprocess
 import os
 import yt_dlp
 from .music import Song, Playlist, Time
-from typing import Literal, Optional
+from typing import Literal
 
 
 # spotify
@@ -37,7 +37,7 @@ ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
 
 
 class Youtube():
-    def get_url_from_formats(self, formats) -> Optional[str]:
+    def get_url_from_formats(self, formats) -> str | None:
         for format in reversed(formats):
             if 'manifest_url' in format or 'ext' not in format:
                 continue
@@ -67,7 +67,6 @@ class Youtube():
                 download=False,
                 process=False
             )
-
             songs: list[Song] = []
             for entry in data['entries']:
                 song = Song(
@@ -102,7 +101,6 @@ class Youtube():
             playlist_id = url.split('list=')[-1].split('&')[0]
             url = 'https://www.youtube.com/playlist?list=' + playlist_id
             data = ytdl.extract_info(url, download=False, process=False)
-
             songs: list[Song] = []
             track_num = 0
             duration = Time(0)
@@ -117,7 +115,6 @@ class Youtube():
                     yturl=entry['url']
                 )
                 songs.append(song)
-
             playlist = Playlist(
                 title=data['title'],
                 url=data['webpage_url'],
@@ -140,10 +137,8 @@ class Spotify():
 
     def from_track(self, query: str) -> Song:
         result = self.sp.track(query)
-
         title = result['name']
         artist = result['artists'][0]['name'] if result['artists'] else None
-
         song = Song(
             type='spotify',
             title=f'{artist} - {title}' if artist else title,
@@ -155,23 +150,19 @@ class Spotify():
 
     def from_playlist(self, query: str) -> tuple[list[Song], Playlist]:
         result = self.sp.playlist(query)
-
         # scroll through tracks pages
         tracks = result['tracks']['items']
         while result['tracks']['next']:
             result['tracks'] = self.sp.next(result['tracks'])
             tracks.extend(result['tracks']['items'])
-
         songs: list[Song] = []
         track_num = 0
         duration = Time(0)
         for track in tracks:
             track_num += 1
             duration += Time(track['track']['duration_ms']//1000)
-
             title = track['track']['name']
             artist = track['track']['artists'][0]['name'] if track['track']['artists'] else None
-
             song = Song(
                 type='spotify',
                 title=f'{artist} - {title}' if artist else title,
@@ -180,7 +171,6 @@ class Spotify():
                 spurl=track['track']['external_urls']['spotify'] if track['track']['external_urls'] else None,
             )
             songs.append(song)
-
         playlist = Playlist(
             title=result['name'],
             url=result['external_urls']['spotify'],
@@ -188,18 +178,15 @@ class Spotify():
             duration=duration,
             track_num=track_num
         )
-
         return songs, playlist
 
     def from_album(self, query: str) -> tuple[list[Song], Playlist]:
         result = self.sp.album(query)
-
         # scroll through tracks pages
         tracks = result['tracks']['items']
         while result['tracks']['next']:
             result['tracks'] = self.sp.next(result['tracks'])
             tracks.extend(result['tracks']['items'])
-
         songs: list[Song] = []
         track_num = 0
         duration = Time(0)
@@ -208,7 +195,6 @@ class Spotify():
             duration += Time(track['duration_ms']//1000)
             title = track['name']
             artist = track['artists'][0]['name'] if track['artists'] else None
-
             song = Song(
                 type='spotify',
                 title=f'{artist} - {title}' if artist else title,
@@ -217,7 +203,6 @@ class Spotify():
                 spurl=track['external_urls']['spotify'] if track['external_urls'] else None,
             )
             songs.append(song)
-
         playlist = Playlist(
             title=result['name'],
             url=result['external_urls']['spotify'],
@@ -225,7 +210,6 @@ class Spotify():
             duration=duration,
             track_num=track_num
         )
-
         return songs, playlist
 
 
@@ -249,24 +233,22 @@ class File():
 
     def search_url(self, link: str) -> Song:
         filename, fileext = os.path.splitext(link)
-        if fileext in self.FILE_EXTS:
-            filename = filename.split('/')[-1]
-            sec = self.sec_from_url(link)
-            if sec:
-                song = Song(
-                    type='file',
-                    title=f'{fileext[1:]} - {filename}',
-                    thumbnail=None,
-                    duration=Time(int(sec)),
-                    url=link,
-                )
-                return song
-            else:
-                raise Exception('Unable to play this file.')
-        else:
+        if fileext not in self.FILE_EXTS:
             raise Exception(
                 'Invalid File type provided!\nSupported formats are: `wav, matroska/webm, mp4, flac, ogg, mp3`'
             )
+        filename = filename.split('/')[-1]
+        sec = self.sec_from_url(link)
+        if not sec:
+            raise Exception('Unable to play this file.')
+        song = Song(
+            type='file',
+            title=f'{fileext[1:]} - {filename}',
+            thumbnail=None,
+            duration=Time(int(sec)),
+            url=link,
+        )
+        return song
 
 
 def search(query: str) -> tuple[list[Song], Playlist | Literal[False]]:
@@ -274,10 +256,8 @@ def search(query: str) -> tuple[list[Song], Playlist | Literal[False]]:
     youtube = Youtube()
     spotify = Spotify()
     file = File()
-
     songs: list[Song] = []
     playlist: Playlist | Literal[False] = False
-
     # spotify
     if query.startswith('https://open.spotify.com/track/') or query.startswith('spotify:track:'):
         songs.append(spotify.from_track(query))
@@ -297,6 +277,5 @@ def search(query: str) -> tuple[list[Song], Playlist | Literal[False]]:
     # query
     else:
         songs.append(youtube.from_query(query))
-
     songs = [song for song in songs if song]  # remove any failed song
     return songs, playlist

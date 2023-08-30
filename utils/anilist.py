@@ -2,7 +2,6 @@ import discord
 import requests
 import html
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -68,12 +67,11 @@ class MediaInfo:
 
     @property
     def color(self) -> discord.Color:
-        if self._color:
-            return discord.Color.from_rgb(
-                *hex_to_rgb(self._color)
-            )
-        else:
+        if not self._color:
             return None
+        return discord.Color.from_rgb(
+            *hex_to_rgb(self._color)
+        )
 
     @property
     def description(self) -> str:
@@ -85,17 +83,17 @@ class MediaInfo:
                             .replace('!~', '||')
                             .replace('<i>', '*')
                             .replace('</i>', '*')
+                            .replace('<b>', '**')
+                            .replace('</b>', '**')
                             .replace('<br>', '')
                             .replace('__', '**'))
-        # char limit
         limit = 350
-        if len(description) > limit:
-            if (description[:limit-3].count('||') % 2) == 0:
-                return description[:limit-3] + '...'
-            else:
-                return description[:limit-3] + '...||'
-        else:
+        if len(description) <= limit:
             return description
+        if (description[:limit-3].count('||') % 2) == 0:
+            return description[:limit-3] + '...'
+        else:
+            return description[:limit-3] + '...||'
 
     @property
     def status(self) -> str:
@@ -114,14 +112,7 @@ class MediaInfo:
             color=self.color
         )
         embed.add_field(name='Format', value=self.format)
-        # if self.type == 'ANIME':
-        #     embed.add_field(name='Episodes', value=self.episodes)
-        # elif self.type == 'MANGA':
-        #     embed.add_field(name='Chapters', value=self.chapters)
         embed.add_field(name='Status', value=self.status)
-        # embed.add_field(name='Average Score',
-        #                 value=self.averageScore)
-        # embed.add_field(name='Genres', value=self.genres)
         embed.add_field(name='Source', value=self.source)
         embed.set_image(url=self.image)
         return embed
@@ -149,17 +140,17 @@ class CharacterInfo:
                             .replace('!~', '||')
                             .replace('<i>', '*')
                             .replace('</i>', '*')
+                            .replace('<b>', '**')
+                            .replace('</b>', '**')
                             .replace('<br>', '')
                             .replace('__', '**'))
-        # char limit
         limit = 350
-        if len(description) > limit:
-            if (description[:limit-3].count('||') % 2) == 0:
-                return description[:limit-3] + '...'
-            else:
-                return description[:limit-3] + '...||'
-        else:
+        if len(description) <= limit:
             return description
+        if (description[:limit-3].count('||') % 2) == 0:
+            return description[:limit-3] + '...'
+        else:
+            return description[:limit-3] + '...||'
 
     @property
     def gender(self) -> str:
@@ -217,7 +208,7 @@ def hex_to_rgb(hex: str) -> tuple[int, int, int]:
     return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
 
 
-def make_requests(query: str, variables: dict) -> Optional[dict]:
+def make_requests(query: str, variables: dict) -> dict | None:
     endpoint = 'https://graphql.anilist.co'
     r = requests.post(endpoint, json={
         'variables': variables,

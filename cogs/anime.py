@@ -1,31 +1,30 @@
 from utils import *
-from math import sqrt, pow, exp
+import numpy as np
 
 import spacy
 nlp = spacy.load('en_core_web_sm')
 
 
 def accuracy(x, y):
-    distance = sqrt(sum(pow(a-b, 2) for a, b in zip(x, y)))
-    return 1/exp(distance)
+    distance = np.sqrt(sum(np.power(a-b, 2) for a, b in zip(x, y)))
+    return 1/np.exp(distance)
 
 
 def average(lst):
     return sum(lst) / len(lst)
 
 
-def key(info: Optional[MediaInfo | CharacterInfo], query: str):
+def key(info: MediaInfo | CharacterInfo, query: str):
     query_embedding = nlp(query).vector
-    if info:
-        if isinstance(info, MediaInfo):
-            sentence = info.title.preferred
-        if isinstance(info, CharacterInfo):
-            sentence = info.name.preferred
-        similarity = average([accuracy(nlp(word).vector, query_embedding)
-                              for word in sentence.split()])
-        return similarity * info.popularity
-    else:
+    if not info:
         return 0
+    if isinstance(info, MediaInfo):
+        sentence = info.title.preferred
+    if isinstance(info, CharacterInfo):
+        sentence = info.name.preferred
+    similarity = average([accuracy(nlp(word).vector, query_embedding)
+                          for word in sentence.split()])
+    return similarity * info.popularity
 
 
 class anime(commands.Cog):
@@ -34,7 +33,7 @@ class anime(commands.Cog):
 
     @commands.command(aliases=['sch', 'sall'], help='<query>', description='Search between `character`, `anime`, and `manga`.\n`[Anime]`')
     async def search(self, ctx: commands.Context, *, query: str):
-        infos: list[Optional[MediaInfo | CharacterInfo]] = [
+        infos: list[MediaInfo | CharacterInfo] = [
             get_anime(query),
             get_manga(query),
             get_character(query),

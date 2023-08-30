@@ -1,12 +1,11 @@
 from utils import *
-from typing import Dict
 
 
 class database(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
         self.ready: bool = False
-        self.server_music: Dict[int, ServerMusic] = {}
+        self.server_music: dict[int, ServerMusic] = {}
         for guild in self.client.server_info:
             self.server_music[guild] = ServerMusic()
 
