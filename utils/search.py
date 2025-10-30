@@ -31,6 +31,7 @@ YTDL_OPTIONS = {
     'default_search': 'ytsearch',
     # bind to ipv4 since ipv6 addresses cause issues sometimes
     'source_address': '0.0.0.0',
+    'cookiefile': 'cookies.txt',
 }
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
