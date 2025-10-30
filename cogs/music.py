@@ -320,11 +320,11 @@ class music(commands.Cog):
             await send_notice(ctx, 'There is currently no song in the queue.', notice_type=WARNING)
         elif skip_idx < queue_len:
             server_music.queue = server_music.queue[skip_idx:]
-            await send_notice(ctx, f'Skipped `{skip_amount}` songs.', ctx.channel, notice_type=MESSAGE)
+            await send_notice(ctx, f'Skipped `{skip_amount}` songs.', notice_type=MESSAGE)
             server_music.vc.stop()
         else:
             server_music.queue = server_music.queue[queue_len-1:]
-            await send_notice(ctx, f'Skipped `{queue_len}` songs.', ctx.channel, notice_type=MESSAGE)
+            await send_notice(ctx, f'Skipped `{queue_len}` songs.', notice_type=MESSAGE)
             server_music.vc.stop()
 
     @commands.command(help='', description='Stops all the songs.\n`[Music]`')
