@@ -31,7 +31,9 @@ YTDL_OPTIONS = {
     'default_search': 'ytsearch',
     # bind to ipv4 since ipv6 addresses cause issues sometimes
     'source_address': '0.0.0.0',
-    'cookiefile': 'cookies.txt',
+    'cookiefile': '/home/ubuntu/sagiri-bot/cookies.txt',
+    'cookies': '/home/ubuntu/sagiri-bot/cookies.txt',
+#    'cookiesfrombrowser': ('firefox', 'default', None, 'Meta'),
 }
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
